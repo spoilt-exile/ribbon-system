@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>tk.freaxsoftware.ukrinform</groupId>
-    <artifactId>ribbon-system-meta</artifactId>
-    <version>a3</version>
-    <packaging>pom</packaging>
+    <parent>
+        <groupId>tk.freaxsoftware.ukrinform.ribbon</groupId>
+        <artifactId>lib</artifactId>
+        <version>a3</version>
+    </parent>
+    <groupId>tk.freaxsoftware.ukrinform.ribbon.lib</groupId>
+    <artifactId>data</artifactId>
+    <packaging>jar</packaging>
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <developers>
         <developer>
@@ -17,11 +22,7 @@
             <email>spoilt@blackstarfilm.com</email>
         </developer>
     </developers>
-    <name>Ribbon System :: Meta :: ${project.version}</name>
-    <description>Ribbon system is a new generation news processing application for 
-news agencies.</description>
-    <modules>
-        <module>lib</module>
-        <module>server</module>
-    </modules>
+    <name>Ribbon System :: Libs :: libRibbonData :: ${project.version}</name>
+    <description>libRibbonData port;</description>
+    <version>a3</version>
 </project>

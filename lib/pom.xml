@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>tk.freaxsoftware.ukrinform</groupId>
-    <artifactId>ribbon-system-meta</artifactId>
-    <version>a3</version>
+    <parent>
+        <groupId>tk.freaxsoftware.ukrinform</groupId>
+        <artifactId>ribbon-system-meta</artifactId>
+        <version>a3</version>
+    </parent>
+    <groupId>tk.freaxsoftware.ukrinform.ribbon</groupId>
+    <artifactId>lib</artifactId>
     <packaging>pom</packaging>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <name>Ribbon System :: Libs :: ${project.version}</name>
+    <version>a3</version>
+    <description>Libs for Ribbon System.</description>
+    <modules>
+        <module>data</module>
+        <module>io</module>
+    </modules>
     <developers>
         <developer>
             <id>spoilt</id>
@@ -17,11 +25,4 @@
             <email>spoilt@blackstarfilm.com</email>
         </developer>
     </developers>
-    <name>Ribbon System :: Meta :: ${project.version}</name>
-    <description>Ribbon system is a new generation news processing application for 
-news agencies.</description>
-    <modules>
-        <module>lib</module>
-        <module>server</module>
-    </modules>
 </project>

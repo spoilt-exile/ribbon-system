@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>tk.freaxsoftware.ukrinform</groupId>
+        <artifactId>ribbon-system-meta</artifactId>
+        <version>a3</version>
+    </parent>
+    <groupId>tk.freaxsoftware.ukrinform.ribbon</groupId>
+    <artifactId>server</artifactId>
+    <packaging>jar</packaging>
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+    <developers>
+        <developer>
+            <id>spoilt</id>
+            <name>Stanislav Nepochatov</name>
+            <organization>Freax Software</organization>
+            <organizationUrl>freaxsoftware.tk</organizationUrl>
+            <email>spoilt@blackstarfilm.com</email>
+        </developer>
+    </developers>
+    <name>Ribbon System :: Server :: ${project.version}</name>
+    <description>RibbonServer port;</description>
+    <version>a3</version>
+    <dependencies>
+        <dependency>
+            <groupId>tk.freaxsoftware.ukrinform.ribbon.lib</groupId>
+            <artifactId>data</artifactId>
+            <version>a3</version>
+        </dependency>
+        <dependency>
+            <groupId>tk.freaxsoftware.ukrinform.ribbon.lib</groupId>
+            <artifactId>io</artifactId>
+            <version>a3</version>
+        </dependency>
+    </dependencies>
+</project>
