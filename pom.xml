@@ -23,5 +23,6 @@ news agencies.</description>
     <modules>
         <module>lib</module>
         <module>server</module>
+        <module>plugins</module>
     </modules>
 </project>

@@ -3,3 +3,7 @@
 /lib/target/
 /target/
 /server/target/
+/plugins/import-plain/target/
+/plugins/import-mail/target/
+/plugins/export-plain/target/
+/plugins/export-mail/target/
