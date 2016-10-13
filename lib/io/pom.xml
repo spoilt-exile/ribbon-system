@@ -27,7 +27,7 @@
     <version>a3</version>
     <dependencies>
         <dependency>
-            <groupId>tk.freaxsoftware.ukrinform.lib</groupId>
+            <groupId>tk.freaxsoftware.ukrinform.ribbon.lib</groupId>
             <artifactId>data</artifactId>
             <version>a3</version>
         </dependency>
