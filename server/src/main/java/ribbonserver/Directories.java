@@ -20,6 +20,10 @@
 package ribbonserver;
 
 import Utils.IOControl;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry;
 
 /**
  * Directories handle class
@@ -37,7 +41,7 @@ public final class Directories {
      * Root directory.
      * @since RibbonServer a1
      */
-    private static DirClasses.DirEntry rootDir;
+    private static tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry rootDir;
     
     /**
      * List with pseudo directories.
@@ -56,22 +60,22 @@ public final class Directories {
      * @author Stanislav Nepochatov
      * @since RibbonServer a2
      */
-    public static class PseudoDirEntry extends Generic.CsvElder {
+    public static class PseudoDirEntry extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder {
 
         /**
          * Name of the pseudo directory.
          */
-        public String PSEUDO_DIR_NAME;
+        private String name;
         
         /**
          * Commentary for this pseudo directory.
          */
-        private String COMM;
+        private String description;
         
         /**
          * Array of inernal directories;
          */
-        private java.util.ArrayList<DirClasses.DirEntry> INTERNAL_DIRS = new java.util.ArrayList<DirClasses.DirEntry>();
+        private List<DirEntry> directories = new ArrayList<DirEntry>();
         
         /**
          * Default constructor.
@@ -79,7 +83,7 @@ public final class Directories {
         public PseudoDirEntry() {
             this.baseCount = 2;
             this.groupCount = 1;
-            this.currentFormat = Generic.CsvElder.csvFormatType.ComplexCsv;
+            this.currentFormat = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder.csvFormatType.ComplexCsv;
         }
         
         /**
@@ -88,18 +92,75 @@ public final class Directories {
          */
         public PseudoDirEntry(String givenCsv) {
             this();
-            java.util.ArrayList<String[]> parsed = Generic.CsvFormat.fromCsv(this, givenCsv);
-            PSEUDO_DIR_NAME = parsed.get(0)[0];
-            COMM = parsed.get(0)[1];
+            java.util.ArrayList<String[]> parsed = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.fromCsv(this, givenCsv);
+            name = parsed.get(0)[0];
+            description = parsed.get(0)[1];
             String[] parsedDirs = parsed.get(1);
             for (String currParsedDir : parsedDirs) {
-                DirClasses.DirEntry addDir = Directories.rootDir.returnEndDir("", currParsedDir);
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry addDir = Directories.rootDir.returnEndDir("", currParsedDir);
                 if (addDir != null) {
-                    INTERNAL_DIRS.add(addDir);
+                    directories.add(addDir);
                 } else {
                     RibbonServer.logAppend(LOG_ID, 1, "помилка у індексі псевдонапрямків (напрямок " + currParsedDir + " не існує)");
                 }
             }
+        }
+        
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public List<DirEntry> getDirectories() {
+            return directories;
+        }
+
+        public void setDirectories(List<DirEntry> directories) {
+            this.directories = directories;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 5;
+            hash = 31 * hash + Objects.hashCode(this.name);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final PseudoDirEntry other = (PseudoDirEntry) obj;
+            if (!Objects.equals(this.name, other.name)) {
+                return false;
+            }
+            if (!Objects.equals(this.description, other.description)) {
+                return false;
+            }
+            if (!Objects.equals(this.directories, other.directories)) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "PseudoDirEntry{" + "name=" + name + ", description=" + description + ", directories=" + directories + '}';
         }
         
         /**
@@ -107,9 +168,9 @@ public final class Directories {
          * @return 
          */
         public String[] getinternalDirectories() {
-            String[] returned = new String[this.INTERNAL_DIRS.size()];
+            String[] returned = new String[this.directories.size()];
             for (int index = 0; index < returned.length; index++) {
-                returned[index] = this.INTERNAL_DIRS.get(index).FULL_DIR_NAME;
+                returned[index] = this.directories.get(index).getFullName();
             }
             return returned;
         }
@@ -127,12 +188,11 @@ public final class Directories {
             }
         }
         
-        
         @Override
         public String toCsv() {
-            String returned = "{" + this.PSEUDO_DIR_NAME + "},{" + this.COMM + "},[";
-            for (DirClasses.DirEntry currDir : INTERNAL_DIRS) {
-                returned += currDir.FULL_DIR_NAME;
+            String returned = "{" + this.name + "},{" + this.description + "},[";
+            for (tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry currDir : directories) {
+                returned += currDir.getFullName();
             }
             return returned + "]";
         }
@@ -143,22 +203,22 @@ public final class Directories {
      * @since RibbonServer a2
      */
     public static void init() {
-        rootDir = new DirClasses.DirEntry();
-        java.util.ArrayList<DirClasses.DirSchema> readedDirs = IndexReader.readDirectories();
-        java.util.ListIterator<DirClasses.DirSchema> readIter = readedDirs.listIterator();
+        rootDir = new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry();
+        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readedDirs = IndexReader.readDirectories();
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readIter = readedDirs.listIterator();
         while (readIter.hasNext()) {
-            DirClasses.DirSchema currDir = readIter.next();
-            RibbonServer.logAppend(LOG_ID, 3, "додано напрямок (" + currDir.FULL_DIR_NAME + ": " + currDir.COMM + ")");
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema currDir = readIter.next();
+            RibbonServer.logAppend(LOG_ID, 3, "додано напрямок (" + currDir.getFullName() + ": " + currDir.getDescription() + ")");
             createDirs(currDir);
             if (RibbonServer.IO_ENABLED) {
-                IOControl.dispathcer.subscribeDir(currDir.DIR_EXPORTS, currDir.FULL_DIR_NAME);
+                IOControl.dispathcer.subscribeDir(currDir.getExportList(), currDir.getFullName());
             }
         }
         rootDir.deployDir(RibbonServer.BASE_PATH);
         if (RibbonServer.ACCESS_ALLOW_REMOTE) {
             pseudoDirs = IndexReader.readPseudoDirectories();
             for (PseudoDirEntry curr: pseudoDirs) {
-                RibbonServer.logAppend(LOG_ID, 3, "додано псевдонапрямок " + curr.PSEUDO_DIR_NAME + " " + Generic.CsvFormat.renderGroup(curr.getinternalDirectories()));
+                RibbonServer.logAppend(LOG_ID, 3, "додано псевдонапрямок " + curr.getName() + " " + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(curr.getinternalDirectories()));
             }
         }
     }
@@ -168,8 +228,8 @@ public final class Directories {
      * @param givenSchema directory schema
      * @since RibbonServer a1
      */
-    public static void createDirs(DirClasses.DirSchema givenSchema) {
-        Directories.rootDir.insertDir("", givenSchema.FULL_DIR_NAME, givenSchema);
+    public static void createDirs(tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema givenSchema) {
+        Directories.rootDir.insertDir("", givenSchema.getFullName(), givenSchema);
     }
     
     /**
@@ -218,7 +278,7 @@ public final class Directories {
      * @return array with permission entries;
      * @since RibbonServer a2
      */
-    public static DirClasses.DirPermissionEntry[] getDirAccess(String givenDir) {
+    public static tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry[] getDirAccess(String givenDir) {
         try {
             return Directories.rootDir.getAccess("", givenDir);
         } catch (Exception ex) {
@@ -233,11 +293,11 @@ public final class Directories {
      * @since RibbonServer a1
      */
     public static String getDirPath(String givenDir) {
-        DirClasses.DirEntry returned = rootDir.returnEndDir("", givenDir);
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry returned = rootDir.returnEndDir("", givenDir);
         if (returned == null) {
             return null;
         }
-        return returned.DIR_PATH;
+        return returned.getDirPath();
     }
     
     /**
@@ -247,7 +307,7 @@ public final class Directories {
      */
     public static String PROC_GET_DIRS() {
         String returned = "";
-        java.util.ListIterator<DirClasses.DirEntry> rootDirs = Directories.rootDir.FOLDED_DIR.listIterator();
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry> rootDirs = Directories.rootDir.getChildrenDirs().listIterator();
         while (rootDirs.hasNext()) {
             returned += rootDirs.next().PROC_GET_DIR();
         }
@@ -262,7 +322,7 @@ public final class Directories {
      */
     public static PseudoDirEntry getPseudoDir(String pseudoName) {
         for (PseudoDirEntry curr: pseudoDirs) {
-            if (curr.PSEUDO_DIR_NAME.equals(pseudoName)) {
+            if (curr.getName().equals(pseudoName)) {
                 return curr;
             }
         }

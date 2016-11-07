@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Generic;
+package tk.freaxsoftware.ukrinform.ribbon.lib.data.csv;
 
 /**
  * Additional fields and methods to represent

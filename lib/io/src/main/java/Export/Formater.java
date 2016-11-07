@@ -35,7 +35,7 @@ public class Formater {
     /**
      * Current formatting message.
      */
-    private MessageClasses.Message currMessage;
+    private tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message currMessage;
     
     /**
      * Current called directory.
@@ -64,7 +64,7 @@ public class Formater {
      * @param calledDir message dir;
      * @return formated string.
      */
-    public String format(MessageClasses.Message givenMessage, String calledDir) {
+    public String format(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, String calledDir) {
         this.currCalledDir = calledDir;
         this.currMessage = givenMessage;
         if (this.templateChar == null) {
@@ -155,7 +155,7 @@ public class Formater {
         new FormatOperation("INDEX") {
             @Override
             public String process(Formater givenFormater) {
-                return givenFormater.currMessage.INDEX;
+                return givenFormater.currMessage.getIndex();
             }
         },
         
@@ -176,11 +176,11 @@ public class Formater {
             @Override
             public String process(Formater givenFormater) {
                 String compTag = "";
-                for (Integer tagIndex=0; tagIndex < givenFormater.currMessage.TAGS.length; tagIndex++) {
-                    if (tagIndex == givenFormater.currMessage.TAGS.length - 1) {
-                        compTag = compTag + givenFormater.currMessage.TAGS[tagIndex];
+                for (Integer tagIndex=0; tagIndex < givenFormater.currMessage.getTags().length; tagIndex++) {
+                    if (tagIndex == givenFormater.currMessage.getTags().length - 1) {
+                        compTag = compTag + givenFormater.currMessage.getTags()[tagIndex];
                     } else {
-                        compTag = compTag + givenFormater.currMessage.TAGS[tagIndex] + ", ";
+                        compTag = compTag + givenFormater.currMessage.getTags()[tagIndex] + ", ";
                     }
                 }
                 return compTag;
@@ -194,11 +194,11 @@ public class Formater {
             @Override
             public String process(Formater givenFormater) {
                 String compTag = "";
-                for (Integer tagIndex=0; tagIndex < givenFormater.currMessage.TAGS.length; tagIndex++) {
-                    if (tagIndex == givenFormater.currMessage.TAGS.length - 1) {
-                        compTag = compTag + givenFormater.currMessage.TAGS[tagIndex].toUpperCase();
+                for (Integer tagIndex=0; tagIndex < givenFormater.currMessage.getTags().length; tagIndex++) {
+                    if (tagIndex == givenFormater.currMessage.getTags().length - 1) {
+                        compTag = compTag + givenFormater.currMessage.getTags()[tagIndex].toUpperCase();
                     } else {
-                        compTag = compTag + givenFormater.currMessage.TAGS[tagIndex].toUpperCase() + "-";
+                        compTag = compTag + givenFormater.currMessage.getTags()[tagIndex].toUpperCase() + "-";
                     }
                 }
                 return compTag;
@@ -211,7 +211,7 @@ public class Formater {
         new FormatOperation("HEADER") {
             @Override
             public String process(Formater givenFormater) {
-                return givenFormater.currMessage.HEADER;
+                return givenFormater.currMessage.getHeader();
             }
         },
         
@@ -221,7 +221,7 @@ public class Formater {
         new FormatOperation("UPPER_HEADER") {
             @Override
             public String process(Formater givenFormater) {
-                return givenFormater.currMessage.HEADER.toUpperCase();
+                return givenFormater.currMessage.getHeader().toUpperCase();
             }
         },
         
@@ -231,7 +231,7 @@ public class Formater {
         new FormatOperation("CONTENT") {
             @Override
             public String process(Formater givenFormater) {
-                return givenFormater.currMessage.CONTENT;
+                return givenFormater.currMessage.getContent();
             }
         },
         
@@ -241,7 +241,7 @@ public class Formater {
         new FormatOperation("HTML_CONTENT") {
             @Override
             public String process(Formater givenFormater) {
-                return givenFormater.currMessage.CONTENT.replaceAll("\n","<br/>");
+                return givenFormater.currMessage.getContent().replaceAll("\n","<br/>");
             }
         },
         
@@ -251,14 +251,14 @@ public class Formater {
         new FormatOperation("AUTHOR") {
             @Override
             public String process(Formater givenFormater) {
-                java.util.ListIterator<MessageClasses.MessageProperty> propIter = givenFormater.currMessage.PROPERTIES.listIterator();
+                java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty> propIter = givenFormater.currMessage.getProperties().listIterator();
                 while (propIter.hasNext()) {
-                    MessageClasses.MessageProperty currProp = propIter.next();
-                    if (currProp.TYPE.equals("COPYRIGHT")) {
-                        return currProp.TEXT_MESSAGE;
+                    tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty currProp = propIter.next();
+                    if (currProp.getType().equals("COPYRIGHT")) {
+                        return currProp.getDescription();
                     }
                 }
-                return givenFormater.currMessage.AUTHOR;
+                return givenFormater.currMessage.getAuthor();
             }
         },
         
@@ -268,7 +268,7 @@ public class Formater {
         new FormatOperation("DATE") {
             @Override
             public String process(Formater givenFormater) {
-                return givenFormater.currMessage.DATE;
+                return givenFormater.currMessage.getDate();
             }
         }
     };

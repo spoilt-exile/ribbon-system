@@ -35,7 +35,7 @@ public class Plain extends Export.Exporter {
      * @param givenSwitch message index updater switch;
      * @param givenDir dir which message came from;
      */
-    public Plain(MessageClasses.Message givenMessage, Export.Schema givenSchema, Export.ReleaseSwitch givenSwitch, String givenDir) {
+    public Plain(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, Export.Schema givenSchema, Export.ReleaseSwitch givenSwitch, String givenDir) {
         super(givenMessage, givenSchema, givenSwitch, givenDir);
     }
 
@@ -45,13 +45,13 @@ public class Plain extends Export.Exporter {
         //TODO: make this part according to specs.
         switch (this.currSchema.currConfig.getProperty("plain_naming")) {
             case "HEADER":
-                fileName = this.exportedMessage.HEADER;
+                fileName = this.exportedMessage.getHeader();
                 break;
             case "INDEX":
-                fileName = this.exportedMessage.INDEX;
+                fileName = this.exportedMessage.getIndex();
                 break;
             default:
-                fileName = this.exportedMessage.INDEX;
+                fileName = this.exportedMessage.getIndex();
         }
         java.io.File exportFile = new java.io.File(this.currSchema.currConfig.getProperty("plain_path") + "/" + fileName);
         exportFile.createNewFile();

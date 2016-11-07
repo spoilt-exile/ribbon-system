@@ -46,7 +46,7 @@ public final class SessionManager {
      * Session entry class for quick session resume.
      * @since RibbonServer a2
      */
-    public static class SessionEntry extends Generic.CsvElder {
+    public static class SessionEntry extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder {
         
         /**
          * Hash id of the session.
@@ -73,7 +73,7 @@ public final class SessionManager {
          */
         public SessionEntry() {
             this.baseCount = 3;
-            this.currentFormat = Generic.CsvElder.csvFormatType.SimpleCsv;
+            this.currentFormat = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder.csvFormatType.SimpleCsv;
         }
         
         /**
@@ -82,7 +82,7 @@ public final class SessionManager {
          */
         public SessionEntry(String givenCsv) {
             this();
-            java.util.ArrayList<String[]> parsedStruct = Generic.CsvFormat.fromCsv(this, givenCsv);
+            java.util.ArrayList<String[]> parsedStruct = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.fromCsv(this, givenCsv);
             String[] baseArray = parsedStruct.get(0);
             this.SESSION_HASH_ID = baseArray[0];
             this.SESSION_USER_NAME = baseArray[1];

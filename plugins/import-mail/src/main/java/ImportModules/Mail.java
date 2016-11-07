@@ -19,7 +19,7 @@
 
 package ImportModules;
 
-import Generic.CsvElder;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder;
 import Utils.IOControl;
 import com.sun.mail.util.BASE64DecoderStream;
 import com.sun.mail.util.MailSSLSocketFactory;
@@ -31,8 +31,6 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.activation.DataSource;
 import javax.mail.Flags;
 import javax.mail.Folder;
@@ -267,8 +265,8 @@ public class Mail extends Import.Importer {
                 
                 if (pass) {
 
-                    final MessageClasses.Message mailMessage = this.readMail(passedAddr, currMessage, passRecord);
-                    if (mailMessage.CONTENT != null) {
+                    final tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message mailMessage = this.readMail(passedAddr, currMessage, passRecord);
+                    if (mailMessage.getContent() != null) {
                         mailMessage.addProperty("root", this.importerName, this.importerPrint);
                         IOControl.serverWrapper.addMessage(importerName, "MAIL", mailMessage);
 
@@ -326,13 +324,13 @@ public class Mail extends Import.Importer {
         // Do nothing now.
     }
     
-    private MessageClasses.Message readMail(InternetAddress address, Message message, WhitelistRecord passRecord) throws MessagingException, IOException {
-        MessageClasses.Message newMessage = new MessageClasses.Message();
-        newMessage.HEADER = message.getSubject();
-        newMessage.AUTHOR = "root";
-        newMessage.TAGS = new String[] {"тест"};
-        newMessage.LANG = "UKN";
-        newMessage.ORIG_INDEX = "-1";
+    private tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message readMail(InternetAddress address, Message message, WhitelistRecord passRecord) throws MessagingException, IOException {
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message newMessage = new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message();
+        newMessage.setHeader(message.getSubject());
+        newMessage.setAuthor("root");
+        newMessage.setTags(new String[] {"тест"});
+        newMessage.setLanguage("UKN");
+        newMessage.setPreviousIndex("-1");
         
         MimeMessage pop3Message = (MimeMessage) message;
         Object content = pop3Message.getContent();
@@ -349,7 +347,7 @@ public class Mail extends Import.Importer {
                     contentBuffer.append(currentLine);
                     contentBuffer.append("\n");
                 }
-                newMessage.CONTENT = contentBuffer.toString();
+                newMessage.setContent(contentBuffer.toString());
             }
         } else if (pop3Message.isMimeType("multipart/*")) {
             DataSource source = new ByteArrayDataSource(pop3Message.getInputStream(), "multipart/*");
@@ -358,7 +356,7 @@ public class Mail extends Import.Importer {
             int count = mp.getCount();
             
             
-            newMessage.CONTENT = "EMPTY MESSAGE";
+            newMessage.setContent("EMPTY MESSAGE");
         } else if (pop3Message.isMimeType("text/html")) {
             if (content instanceof SharedByteArrayInputStream || content instanceof QPDecoderStream) {
                 InputStream stream = (InputStream) content;
@@ -372,16 +370,16 @@ public class Mail extends Import.Importer {
                     contentBuffer.append("\n");
                 }
                 String plainText = Jsoup.parse(contentBuffer.toString()).text();
-                newMessage.CONTENT = plainText;
+                newMessage.setContent(plainText);
             }
         }
         
         if (passRecord != null) {
             newMessage.setCopyright("root", passRecord.COPYRIGHT);
-            newMessage.DIRS = passRecord.DIRS;
+            newMessage.setDirectories(passRecord.DIRS);
         } else {
             newMessage.setCopyright("root", address.getPersonal());
-            newMessage.DIRS = new String[] {currConfig.getProperty("mail_read_fallback_dir")};
+            newMessage.setDirectories(new String[] {currConfig.getProperty("mail_read_fallback_dir")});
         }
         
         return newMessage;
@@ -446,7 +444,7 @@ public class Mail extends Import.Importer {
          */
         public WhitelistRecord(String givenCsv) {
             this();
-            java.util.ArrayList<String[]> parsedStruct = Generic.CsvFormat.fromCsv(this, givenCsv);
+            java.util.ArrayList<String[]> parsedStruct = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.fromCsv(this, givenCsv);
             String[] baseArray = parsedStruct.get(0);
             this.ADDRESS = baseArray[0];
             this.COPYRIGHT = baseArray[1];

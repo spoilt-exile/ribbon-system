@@ -34,13 +34,13 @@ public final class AccessHandler {
      * User storage list.
      * @since RibbonServer a2
      */
-    private static java.util.ArrayList<UserClasses.UserEntry> userStore;
+    private static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> userStore;
     
     /**
      * Group storage list.
      * @since RibbonServer a2
      */
-    private static java.util.ArrayList<UserClasses.GroupEntry> groupStore;
+    private static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup> groupStore;
     
     /**
      * Init this component;
@@ -48,7 +48,7 @@ public final class AccessHandler {
      */
     public static void init() {
         AccessHandler.groupStore = IndexReader.readGroups();
-        AccessHandler.groupStore.add(new UserClasses.GroupEntry("{ADM},{Службова група адміністраторів системи \"Стрічка\"}"));
+        AccessHandler.groupStore.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup("{ADM},{Службова група адміністраторів системи \"Стрічка\"}"));
         RibbonServer.logAppend(LOG_ID, 3, "індекс груп опрацьвано (" + groupStore.size() + ")");
         AccessHandler.userStore = IndexReader.readUsers();
         RibbonServer.logAppend(LOG_ID, 3, "індекс користувачів опрацьвано (" + userStore.size() + ")");
@@ -68,31 +68,31 @@ public final class AccessHandler {
      * @since RibbonServer a2
      */
     public static Boolean checkAccess(String givenName, String givenDir, Integer givenMode) {
-        java.util.ListIterator<UserClasses.UserEntry> userIter = AccessHandler.userStore.listIterator();
-        UserClasses.UserEntry findedUser = null;
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> userIter = AccessHandler.userStore.listIterator();
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User findedUser = null;
         while (userIter.hasNext()) {
-            UserClasses.UserEntry currUser = userIter.next();
-            if (currUser.USER_NAME.equals(givenName)) {
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User currUser = userIter.next();
+            if (currUser.getLogin().equals(givenName)) {
                 findedUser = currUser;
                 break;
             }
         }
-        String[] keyArray = Arrays.copyOf(findedUser.GROUPS, findedUser.GROUPS.length + 1);
-        keyArray[keyArray.length - 1] = findedUser.USER_NAME;
+        String[] keyArray = Arrays.copyOf(findedUser.getGroups(),findedUser.getGroups().length + 1);
+        keyArray[keyArray.length - 1] = findedUser.getLogin();
         Boolean findedAnswer = false;
-        DirClasses.DirPermissionEntry fallbackPermission = null;
-        DirClasses.DirPermissionEntry[] dirAccessArray = Directories.getDirAccess(givenDir);
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry fallbackPermission = null;
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry[] dirAccessArray = Directories.getDirAccess(givenDir);
         if (dirAccessArray != null) {
             for (Integer keyIndex = 0; keyIndex < keyArray.length; keyIndex++) {
                 for (Integer dirIndex = 0; dirIndex < dirAccessArray.length; dirIndex++) {
                     if (keyArray[keyIndex].equals("ADM") && !keyIndex.equals(keyArray.length - 1)) {
                         return true;    //ADM is root-like group, all permission will be ignored
                     }
-                    if (dirAccessArray[dirIndex].KEY.equals("ALL")) {
+                    if (dirAccessArray[dirIndex].getKey().equals("ALL")) {
                         fallbackPermission = dirAccessArray[dirIndex];
                         continue;
                     }
-                    if (dirAccessArray[dirIndex].KEY.equals(keyArray[keyIndex])) {
+                    if (dirAccessArray[dirIndex].getKey().equals(keyArray[keyIndex])) {
                         findedAnswer = dirAccessArray[dirIndex].checkByMode(givenMode);
                         if (findedAnswer == true) {
                             return findedAnswer;
@@ -110,7 +110,7 @@ public final class AccessHandler {
             }
         }
         if (fallbackPermission == null) {
-            fallbackPermission = new DirClasses.DirPermissionEntry("GALL:" + RibbonServer.ACCESS_ALL_MASK);
+            fallbackPermission = new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry("GALL:" + RibbonServer.ACCESS_ALL_MASK);
         }
         if (findedAnswer == false) {
             findedAnswer = fallbackPermission.checkByMode(givenMode);
@@ -147,11 +147,11 @@ public final class AccessHandler {
      * @since RibbonServer a2
      */
     public static Boolean isUserIsMemberOf(String givenName, String givenGroup) {
-        java.util.ListIterator<UserClasses.UserEntry> userIter = AccessHandler.userStore.listIterator();
-        UserClasses.UserEntry findedUser = null;
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> userIter = AccessHandler.userStore.listIterator();
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User findedUser = null;
         while (userIter.hasNext()) {
-            UserClasses.UserEntry currUser = userIter.next();
-            if (currUser.USER_NAME.equals(givenName)) {
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User currUser = userIter.next();
+            if (currUser.getLogin().equals(givenName)) {
                 findedUser = currUser;
                 break;
             }
@@ -159,7 +159,7 @@ public final class AccessHandler {
         if (findedUser == null) {
             return false;
         }
-        for (String groupItem : findedUser.GROUPS) {
+        for (String groupItem : findedUser.getGroups()) {
             if (groupItem.equals("ADM")) {
                 return true;
             }
@@ -175,18 +175,18 @@ public final class AccessHandler {
      * @since RibbonServer a2
      */
     public static String PROC_LOGIN_USER(String givenName, String givenHash) {
-        UserClasses.UserEntry findedUser = null;
-        java.util.ListIterator<UserClasses.UserEntry> usersIter = userStore.listIterator();
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User findedUser = null;
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> usersIter = userStore.listIterator();
         while (usersIter.hasNext()) {
-            UserClasses.UserEntry currUser = usersIter.next();
-            if (currUser.USER_NAME.equals(givenName)) {
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User currUser = usersIter.next();
+            if (currUser.getLogin().equals(givenName)) {
                 findedUser = currUser;
                 break;
             }
         }
         if (findedUser != null) {
-            if (findedUser.H_PASSWORD.equals(givenHash)) {
-                if (!findedUser.IS_ENABLED) {
+            if (findedUser.getPassword().equals(givenHash)) {
+                if (!findedUser.isEnabled()) {
                     return "Користувач " + givenName + " заблоковано!";
                 } else {
                     return null;
@@ -206,17 +206,17 @@ public final class AccessHandler {
      * @since RibbonServer a2
      */
     public static String PROC_RESUME_USER(SessionManager.SessionEntry givenEntry) {
-        UserClasses.UserEntry findedUser = null;
-        java.util.ListIterator<UserClasses.UserEntry> usersIter = userStore.listIterator();
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User findedUser = null;
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> usersIter = userStore.listIterator();
         while (usersIter.hasNext()) {
-            UserClasses.UserEntry currUser = usersIter.next();
-            if (currUser.USER_NAME.equals(givenEntry.SESSION_USER_NAME)) {
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User currUser = usersIter.next();
+            if (currUser.getLogin().equals(givenEntry.SESSION_USER_NAME)) {
                 findedUser = currUser;
                 break;
             }
         }
         if (findedUser != null) {
-            if (!findedUser.IS_ENABLED) {
+            if (!findedUser.isEnabled()) {
                 return "Користувач " + givenEntry.SESSION_USER_NAME + " заблоковано!";
             } else {
                 givenEntry.useEntry();
@@ -235,13 +235,13 @@ public final class AccessHandler {
      */
     public static String PROC_GET_USERS_UNI(Boolean includAdm) {
         StringBuffer userBuf = new StringBuffer();
-        java.util.ListIterator<UserClasses.UserEntry> userIter = userStore.listIterator();
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> userIter = userStore.listIterator();
         while (userIter.hasNext()) {
-            UserClasses.UserEntry currEntry = userIter.next();
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User currEntry = userIter.next();
             userBuf.append("{");
-            userBuf.append(currEntry.USER_NAME);
+            userBuf.append(currEntry.getLogin());
             userBuf.append("},{");
-            userBuf.append(currEntry.COMM);
+            userBuf.append(currEntry.getDescription());
             userBuf.append("}\n");
         }
         userBuf.append("END:");
@@ -255,9 +255,9 @@ public final class AccessHandler {
      * @since RibbonServer a2
      */
     public static Boolean isGroupExisted(String givenGroupName) {
-        java.util.ListIterator<UserClasses.GroupEntry> groupIter = groupStore.listIterator();
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup> groupIter = groupStore.listIterator();
         while (groupIter.hasNext()) {
-            if (groupIter.next().GROUP_NAME.equals(givenGroupName)) {
+            if (groupIter.next().getName().equals(givenGroupName)) {
                 return true;
             }
         }
@@ -269,12 +269,12 @@ public final class AccessHandler {
      * @param givenName name to search;
      * @return finded entry or null;
      */
-    public static UserClasses.UserEntry getEntryByName(String givenName) {
-        UserClasses.UserEntry result = null;
-        java.util.ListIterator<UserClasses.UserEntry> userIter = AccessHandler.userStore.listIterator();
+    public static tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User getEntryByName(String givenName) {
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User result = null;
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> userIter = AccessHandler.userStore.listIterator();
         while (userIter.hasNext()) {
-            UserClasses.UserEntry curr = userIter.next();
-            if (curr.USER_NAME.equals(givenName)) {
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User curr = userIter.next();
+            if (curr.getLogin().equals(givenName)) {
                 result = curr;
                 break;
             }

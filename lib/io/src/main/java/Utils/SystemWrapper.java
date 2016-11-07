@@ -39,7 +39,7 @@ public abstract class SystemWrapper {
      * @param typeName name of import type;
      * @param givenMessage message to add;
      */
-    public abstract void addMessage(String schemeName, String typeName, MessageClasses.Message givenMessage);
+    public abstract void addMessage(String schemeName, String typeName, tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage);
     
     /**
      * Call message index updating.

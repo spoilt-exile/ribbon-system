@@ -52,7 +52,7 @@ public abstract class Exporter extends Thread {
     /**
      * Current exporting message.
      */
-    protected MessageClasses.Message exportedMessage;
+    protected tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message exportedMessage;
     
     /**
      * Charset for export.
@@ -66,7 +66,7 @@ public abstract class Exporter extends Thread {
      * @param givenSwitch message index updater switch;
      * @param givenDir dir which message came from;
      */
-    public Exporter(MessageClasses.Message givenMessage, Schema givenSchema, ReleaseSwitch givenSwitch, String givenDir) {
+    public Exporter(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, Schema givenSchema, ReleaseSwitch givenSwitch, String givenDir) {
         currSchema = givenSchema;
         currSwitch = givenSwitch;
         exportedMessage = givenMessage;
@@ -74,7 +74,7 @@ public abstract class Exporter extends Thread {
         if (currSchema.currFormater !=null) {
             exportedContent = currSchema.currFormater.format(exportedMessage, calledDir);
         } else {
-            exportedContent = exportedMessage.CONTENT;
+            exportedContent = exportedMessage.getContent();
         }
         if (currSchema.currConfig.getProperty("opt_charset") != null) {
             exportedCharset = currSchema.currConfig.getProperty("opt_charset");
@@ -86,21 +86,21 @@ public abstract class Exporter extends Thread {
         try {
             doExport();
             if ("1".equals(this.currSchema.currConfig.getProperty("opt_log"))) {
-                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 3, "прозведено експорт повідомлення " + this.exportedMessage.INDEX);
+                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 3, "прозведено експорт повідомлення " + this.exportedMessage.getIndex());
             }
-            exportedMessage.PROPERTIES.add(new MessageClasses.MessageProperty("EXPORT_" + this.currSchema.currConfig.getProperty("export_type"), "root", this.currSchema.currConfig.getProperty("export_print")));
+            exportedMessage.getProperties().add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty("EXPORT_" + this.currSchema.currConfig.getProperty("export_type"), "root", this.currSchema.currConfig.getProperty("export_print")));
         } catch (Exception ex) {
             //IOControl.serverWrapper.enableDirtyState(this.currSchema.type, this.currSchema.name, this.currSchema.currConfig.getProperty("export_print"));
             IOControl.serverWrapper.postException("Помилка експорту: схема " + this.currSchema.name
                     + " тип " + this.currSchema.type
-                    + "\nПовідомлення " + this.exportedMessage.HEADER + " за індексом " + this.exportedMessage.INDEX, ex);
+                    + "\nПовідомлення " + this.exportedMessage.getHeader() + " за індексом " + this.exportedMessage.getIndex(), ex);
             switch (this.currSchema.currAction) {
                 case PLACE_ERRQ_DIRTY:
                     IOControl.serverWrapper.enableDirtyState(this.currSchema.type, this.currSchema.name, this.currSchema.currConfig.getProperty("export_print"));
                     IOControl.dispathcer.addToQuene(this);
                     break;
                 case DROP_WARN: 
-                    IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 1, "експорт повідомлення '" + this.exportedMessage.HEADER + "' завершився помилкою.");
+                    IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 1, "експорт повідомлення '" + this.exportedMessage.getHeader() + "' завершився помилкою.");
                     break;
                 case DROP_SILENT:   //Do nothing
                     break;
@@ -122,10 +122,10 @@ public abstract class Exporter extends Thread {
         try {
             this.doExport();
             if ("1".equals(this.currSchema.currConfig.getProperty("opt_log"))) {
-                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 3, "прозведено експорт повідомлення " + this.exportedMessage.INDEX);
+                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 3, "прозведено експорт повідомлення " + this.exportedMessage.getIndex());
             }
-            exportedMessage.PROPERTIES.add(new MessageClasses.MessageProperty("EXPORT_" + this.currSchema.currConfig.getProperty("export_type"), "root", this.currSchema.currConfig.getProperty("export_print")));
-            IOControl.serverWrapper.updateIndex(this.exportedMessage.INDEX);
+            exportedMessage.getProperties().add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty("EXPORT_" + this.currSchema.currConfig.getProperty("export_type"), "root", this.currSchema.currConfig.getProperty("export_print")));
+            IOControl.serverWrapper.updateIndex(this.exportedMessage.getIndex());
             IOControl.serverWrapper.disableDirtyState(this.currSchema.type, this.currSchema.name, this.currSchema.currConfig.getProperty("export_print"));
             return true;
         } catch (Exception ex) {

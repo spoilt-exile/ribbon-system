@@ -32,13 +32,13 @@ public final class Messenger {
      * Storage of message entries.
      * @since RibbonServer a1
      */
-    public static java.util.ArrayList<MessageClasses.MessageEntry> messageIndex;
+    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry> messageIndex;
     
     /**
      * Storage of tag etries.
      * @since RibbonServer a1
      */
-    public static java.util.ArrayList<MessageClasses.TagEntry> tagIndex;
+    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.TagEntry> tagIndex;
     
     /**
      * Index for new message.
@@ -64,20 +64,20 @@ public final class Messenger {
      */
     public static void init() {
         messageIndex = IndexReader.readBaseIndex();
-        java.util.ListIterator<MessageClasses.MessageEntry> messageIter = messageIndex.listIterator();
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry> messageIter = messageIndex.listIterator();
         tagIndex = new java.util.ArrayList<>();
         while (messageIter.hasNext()) {
-            MessageClasses.MessageEntry currEntry = messageIter.next();
-            if (currEntry.INDEX != null) {
-                if (Integer.parseInt(currEntry.INDEX) > newIndex) {
-                    newIndex = Integer.parseInt(currEntry.INDEX);
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry currEntry = messageIter.next();
+            if (currEntry.getIndex() != null) {
+                if (Integer.parseInt(currEntry.getIndex()) > newIndex) {
+                    newIndex = Integer.parseInt(currEntry.getIndex());
                 }
             } else {
                 continue;
             }
-            String[] currDirs = currEntry.DIRS;
+            String[] currDirs = currEntry.getDirectories();
             for (Integer dirIndex = 0; dirIndex < currDirs.length; dirIndex++) {
-                Directories.addIndexToDir(currDirs[dirIndex], currEntry.INDEX);
+                Directories.addIndexToDir(currDirs[dirIndex], currEntry.getIndex());
             }
             addToTagIndex(currEntry);
         }
@@ -90,12 +90,12 @@ public final class Messenger {
      * @return tagEntry or null
      * @since RibbonServer a1
      */
-    private static MessageClasses.TagEntry isTagExist(String tagName) {
+    private static tk.freaxsoftware.ukrinform.ribbon.lib.data.message.TagEntry isTagExist(String tagName) {
         synchronized (tagLock) {
-            java.util.ListIterator<MessageClasses.TagEntry> tagIter = Messenger.tagIndex.listIterator();
+            java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.TagEntry> tagIter = Messenger.tagIndex.listIterator();
             while (tagIter.hasNext()) {
-                MessageClasses.TagEntry currTag = tagIter.next();
-                if (currTag.NAME.equals(tagName)) {
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.TagEntry currTag = tagIter.next();
+                if (currTag.getName().equals(tagName)) {
                     return currTag;
                 }
             }
@@ -108,16 +108,16 @@ public final class Messenger {
      * @param givenEntry message entry with tags;
      * @since RibbonServer a2
      */
-    public static void addToTagIndex(MessageClasses.MessageEntry givenEntry) {
+    public static void addToTagIndex(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry givenEntry) {
         synchronized (tagLock) {
-            for (String currTag : givenEntry.TAGS) {
-                MessageClasses.TagEntry namedTag = Messenger.isTagExist(currTag);
+            for (String currTag : givenEntry.getTags()) {
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.TagEntry namedTag = Messenger.isTagExist(currTag);
                 if (namedTag == null) {
-                    namedTag = new MessageClasses.TagEntry(currTag);
-                    namedTag.INDEXES.add(givenEntry.INDEX);
+                    namedTag = new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.TagEntry(currTag);
+                    namedTag.getMessages().add(givenEntry.getIndex());
                     Messenger.tagIndex.add(namedTag);
                 } else {
-                    namedTag.INDEXES.add(givenEntry.INDEX);
+                    namedTag.getMessages().add(givenEntry.getIndex());
                 }
             }
         }
@@ -129,7 +129,7 @@ public final class Messenger {
      * @param newEntry message entry with new tags;
      * @since RibbonServer a2
      */
-    public static void modTagIndex(MessageClasses.MessageEntry oldEntry, MessageClasses.MessageEntry newEntry) {
+    public static void modTagIndex(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry oldEntry, tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry newEntry) {
         removeTagIndex(oldEntry);
         addToTagIndex(newEntry);
     }
@@ -139,12 +139,12 @@ public final class Messenger {
      * @param givenEntry entry with tags to remove;
      * @since RibbonServer a2
      */
-    public static void removeTagIndex(MessageClasses.MessageEntry givenEntry) {
+    public static void removeTagIndex(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry givenEntry) {
         synchronized (tagLock) {
-            for (String currTag : givenEntry.TAGS) {
-                MessageClasses.TagEntry namedTag = Messenger.isTagExist(currTag);
+            for (String currTag : givenEntry.getTags()) {
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.TagEntry namedTag = Messenger.isTagExist(currTag);
                 if (namedTag != null) {
-                    namedTag.INDEXES.remove(givenEntry.INDEX);
+                    namedTag.getMessages().remove(givenEntry.getIndex());
                 }
             }
         }
@@ -168,9 +168,9 @@ public final class Messenger {
      * @param givenEntry given message entry
      * @since RibbonServer a1
      */
-    public static void addMessageToIndex(MessageClasses.Message givenMessage) {
-        givenMessage.INDEX = Messenger.getNewIndex();
-        givenMessage.DATE = RibbonServer.getCurrentDate();
+    public static void addMessageToIndex(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage) {
+        givenMessage.setIndex(Messenger.getNewIndex());
+        givenMessage.setDate(RibbonServer.getCurrentDate());
         synchronized (messageLock) {
             Messenger.messageIndex.add(givenMessage.returnEntry());
         }
@@ -185,7 +185,7 @@ public final class Messenger {
     public static String PROC_GET_TAGS() {
         synchronized (tagLock) {
             StringBuffer getBuf = new StringBuffer();
-            java.util.ListIterator<MessageClasses.TagEntry> tagIter = Messenger.tagIndex.listIterator();
+            java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.TagEntry> tagIter = Messenger.tagIndex.listIterator();
             while (tagIter.hasNext()) {
                 getBuf.append("RIBBON_UCTL_LOAD_TAG:").append(tagIter.next().toCsv()).append("\n");
             }
@@ -204,7 +204,7 @@ public final class Messenger {
             return "END:";
         } else {
             synchronized (messageLock) {
-                java.util.ListIterator<MessageClasses.MessageEntry> messageIter = Messenger.messageIndex.listIterator(Integer.parseInt(givenIndex));
+                java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry> messageIter = Messenger.messageIndex.listIterator(Integer.parseInt(givenIndex));
                 while (messageIter.hasNext()) {
                     getBuf.append("RIBBON_UCTL_LOAD_INDEX:").append(messageIter.next().toCsv()).append("\n");
                 }
@@ -219,12 +219,12 @@ public final class Messenger {
      * @return message entry object or null
      * @since RibbonServer a1
      */
-    public static MessageClasses.MessageEntry getMessageEntryByIndex(String givenIndex) {
+    public static tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry getMessageEntryByIndex(String givenIndex) {
         synchronized (tagLock) {
-            java.util.ListIterator<MessageClasses.MessageEntry> messageIter = Messenger.messageIndex.listIterator();
+            java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry> messageIter = Messenger.messageIndex.listIterator();
             while (messageIter.hasNext()) {
-                MessageClasses.MessageEntry currEntry = messageIter.next();
-                if (currEntry.INDEX.equals(givenIndex)) {
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry currEntry = messageIter.next();
+                if (currEntry.getIndex().equals(givenIndex)) {
                     return currEntry;
                 }
             }
@@ -237,7 +237,7 @@ public final class Messenger {
      * @param givenEntry entry to delete
      * @since RibbonServer a1
      */
-    public static void deleteMessageEntryFromIndex(MessageClasses.MessageEntry givenEntry) {
+    public static void deleteMessageEntryFromIndex(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry givenEntry) {
         synchronized (messageLock) {
             Messenger.messageIndex.remove(givenEntry);
         }

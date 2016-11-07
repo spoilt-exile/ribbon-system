@@ -222,16 +222,16 @@ public class Dispatcher {
      * Init export sequence.
      * @param exportedMessage message to export;
      */
-    public void initExport(MessageClasses.Message exportedMessage) {
+    public void initExport(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message exportedMessage) {
         if (exportedMessage.getProperty("PROCESSING_FORBIDDEN") != null) {
-            IOControl.serverWrapper.log(IOControl.EXPORT_LOGID, 2, "повідомлення " + exportedMessage.INDEX + " заборонено випускати з системи");
+            IOControl.serverWrapper.log(IOControl.EXPORT_LOGID, 2, "повідомлення " + exportedMessage.getIndex() + " заборонено випускати з системи");
             return;
         }
         if (!currWorker.isAlive()) {
             currWorker.start();
         }
-        ReleaseSwitch newSwitch = new ReleaseSwitch(exportedMessage.INDEX);
-        for (String currDir : exportedMessage.DIRS) {
+        ReleaseSwitch newSwitch = new ReleaseSwitch(exportedMessage.getIndex());
+        for (String currDir : exportedMessage.getDirectories()) {
             if (this.subscribes.containsKey(currDir)) {
                 newSwitch.addSchemas(subscribes.get(currDir));
                 java.util.ListIterator<String> schemeIter = subscribes.get(currDir).listIterator();

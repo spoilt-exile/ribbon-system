@@ -17,41 +17,44 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package MessageClasses;
+package tk.freaxsoftware.ukrinform.ribbon.lib.data.message;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Message property class. This properties may control 
  * message processing.
  * @author Stanislav Nepochatov <spoilt.exile@gmail.com>
  */
-public class MessageProperty extends Generic.CsvElder {
+public class MessageProperty extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder {
     
     /**
      * Type of the property.
      */
-    public String TYPE;
+    private String type;
     
     /**
      * Owner of this property.
      */
-    public String USER;
+    private String user;
     
     /**
      * Short decription message for property (one line).
      */
-    public String TEXT_MESSAGE;
+    private String description;
     
     /**
      * Date of marking.
      */
-    public String DATE;
+    private String date;
     
     /**
      * Display property with supported type.
      */
-    private Boolean TYPE_SUPPORTED;
+    private Boolean typeSupported;
     
     /**
      * Types of message properties.
@@ -61,7 +64,7 @@ public class MessageProperty extends Generic.CsvElder {
         /**
          * Type list storage.
          */
-        private static java.util.ArrayList<String> typeList = new java.util.ArrayList<>(Arrays.asList(new String[] {
+        private final static Set<String> typeList = new HashSet<>(Arrays.asList(new String[] {
         
         /** Generic properties **/    
         "URGENT",                       //Message was marked as urgent
@@ -97,7 +100,7 @@ public class MessageProperty extends Generic.CsvElder {
          * @return true if type registered / false if not; 
          */
         public static Boolean isTypeRegistered(String givenType) {
-            return Types.typeList.contains(typeList);
+            return Types.typeList.contains(givenType);
         }
         
     }
@@ -116,13 +119,13 @@ public class MessageProperty extends Generic.CsvElder {
      */
     public MessageProperty(String givenCsv) {
         this();
-        java.util.ArrayList<String[]> parsedStruct = Generic.CsvFormat.fromCsv(this, givenCsv);
+        java.util.ArrayList<String[]> parsedStruct = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.fromCsv(this, givenCsv);
         String[] baseArray = parsedStruct.get(0);
-        this.TYPE = baseArray[0];
-        this.USER = baseArray[1];
-        this.TEXT_MESSAGE = baseArray[2];
-        this.DATE = baseArray[3];
-        this.TYPE_SUPPORTED = Types.isTypeRegistered(TYPE);
+        this.type = baseArray[0];
+        this.user = baseArray[1];
+        this.description = baseArray[2];
+        this.date = baseArray[3];
+        this.typeSupported = Types.isTypeRegistered(type);
     }
     
     /**
@@ -133,13 +136,85 @@ public class MessageProperty extends Generic.CsvElder {
      * @param givenDate 
      */
     public MessageProperty(String givenType, String givenUser, String givenMessage) {
-        TYPE = givenType;
-        USER = givenUser;
-        TEXT_MESSAGE = givenMessage;
+        type = givenType;
+        user = givenUser;
+        description = givenMessage;
         java.text.DateFormat dateFormat = new java.text.SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
         java.util.Date now = new java.util.Date();
-        this.DATE = dateFormat.format(now);
-        this.TYPE_SUPPORTED = Types.isTypeRegistered(TYPE);
+        this.date = dateFormat.format(now);
+        this.typeSupported = Types.isTypeRegistered(type);
+    }
+    
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 13 * hash + Objects.hashCode(this.type);
+        hash = 13 * hash + Objects.hashCode(this.date);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final MessageProperty other = (MessageProperty) obj;
+        if (!Objects.equals(this.type, other.type)) {
+            return false;
+        }
+        if (!Objects.equals(this.user, other.user)) {
+            return false;
+        }
+        if (!Objects.equals(this.description, other.description)) {
+            return false;
+        }
+        if (!Objects.equals(this.date, other.date)) {
+            return false;
+        }
+        if (!Objects.equals(this.typeSupported, other.typeSupported)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "MessageProperty{" + "type=" + type + ", user=" + user + ", description=" + description + ", date=" + date + ", typeSupported=" + typeSupported + '}';
     }
     
     /**
@@ -147,11 +222,11 @@ public class MessageProperty extends Generic.CsvElder {
      * @return true if type registered / false if not.
      */
     public Boolean isTypeSafe() {
-        return TYPE_SUPPORTED;
+        return typeSupported;
     }
     
     @Override
     public String toCsv() {
-        return this.TYPE + ",{" + this.USER + "},{" + (this.TEXT_MESSAGE != null ? this.TEXT_MESSAGE : "") + "}," + this.DATE;
+        return this.type + ",{" + this.user + "},{" + (this.description != null ? this.description : "") + "}," + this.date;
     }
 }

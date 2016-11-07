@@ -119,10 +119,10 @@ public class Schema {
      * @param givenDir called dir;
      * @return new export task;
      */
-    public Exporter getNewExportTask(MessageClasses.Message givenMessage, ReleaseSwitch givenSwitch, String givenDir) {
+    public Exporter getNewExportTask(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, ReleaseSwitch givenSwitch, String givenDir) {
         Exporter newExport = null;
         try {
-            newExport = (Exporter) this.exporterModule.getConstructor(MessageClasses.Message.class, Schema.class, ReleaseSwitch.class, String.class).newInstance(givenMessage, this, givenSwitch, givenDir);
+            newExport = (Exporter) this.exporterModule.getConstructor(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message.class, Schema.class, ReleaseSwitch.class, String.class).newInstance(givenMessage, this, givenSwitch, givenDir);
         } catch (java.lang.reflect.InvocationTargetException ex) {
             ex.getTargetException().printStackTrace();
         } catch (Exception ex) {

@@ -17,7 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Generic;
+package tk.freaxsoftware.ukrinform.ribbon.lib.data.csv;
+
+import java.util.List;
 
 /**
  * Class with some static methods
@@ -316,14 +318,14 @@ public abstract class CsvFormat {
      * @param givenProperties arraylist with properties;
      * @return formated csv form for storing properties objects;
      */
-    public static String renderMessageProperties(java.util.ArrayList<MessageClasses.MessageProperty> givenProperties) {
+    public static String renderMessageProperties(List<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty> givenProperties) {
         if (givenProperties.isEmpty()) {
             return "{}";
         } else {
             String returned = "{";
-            java.util.ListIterator<MessageClasses.MessageProperty> propIter = givenProperties.listIterator();
+            java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty> propIter = givenProperties.listIterator();
             while (propIter.hasNext()) {
-                MessageClasses.MessageProperty currProp = propIter.next();
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty currProp = propIter.next();
                 if (propIter.hasNext()) {
                     returned += currProp.toCsv() + "$";
                 } else {
@@ -368,7 +370,7 @@ public abstract class CsvFormat {
      * @param givenCsv given csv line;
      * @return parsed struct;
      */
-    public static java.util.ArrayList<String[]> fromCsv(Generic.CsvElder givenClass, String givenCsv) {
+    public static java.util.ArrayList<String[]> fromCsv(tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder givenClass, String givenCsv) {
         switch (givenClass.currentFormat) {
             case SimpleCsv:
                 java.util.ArrayList<String[]> parsed = new java.util.ArrayList<String[]>();

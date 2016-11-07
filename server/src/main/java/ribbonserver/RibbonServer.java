@@ -314,11 +314,11 @@ public class RibbonServer {
         }
 
         @Override
-        public void addMessage(String schemeName, String typeName, MessageClasses.Message givenMessage) {
-            for (int index = 0; index < givenMessage.DIRS.length; index++) {
-                if (Directories.getDirPath(givenMessage.DIRS[index]) == null) {
-                    this.log("ОБГОРТКА", 1, "схема " + schemeName + " (" + typeName + ") посилається на неіснуючий напрямок " + givenMessage.DIRS[index]);
-                    givenMessage.DIRS = new String[] {IO_IMPORT_EM_DIR};
+        public void addMessage(String schemeName, String typeName, tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage) {
+            for (int index = 0; index < givenMessage.getDirectories().length; index++) {
+                if (Directories.getDirPath(givenMessage.getDirectories()[index]) == null) {
+                    this.log("ОБГОРТКА", 1, "схема " + schemeName + " (" + typeName + ") посилається на неіснуючий напрямок " + givenMessage.getDirectories()[index]);
+                    givenMessage.setDirectories(new String[] {IO_IMPORT_EM_DIR});
                     break;
                 }
             }
@@ -328,7 +328,7 @@ public class RibbonServer {
 
         @Override
         public void registerPropertyName(String givenName) {
-            Boolean result = MessageClasses.MessageProperty.Types.registerTypeIfNotExist(givenName);
+            Boolean result = tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty.Types.registerTypeIfNotExist(givenName);
             if (result) {
                 this.log(IOControl.LOG_ID, 2, "зареєстровано новий тип ознак '" + givenName + "'");
             }

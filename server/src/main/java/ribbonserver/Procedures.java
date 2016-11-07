@@ -36,32 +36,32 @@ public class Procedures {
      * @return processing status;
      * @since RibbonServer a1
      */
-    public static synchronized String PROC_POST_MESSAGE(MessageClasses.Message givenMessage) {
+    public static synchronized String PROC_POST_MESSAGE(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage) {
         if (RibbonServer.CURR_STATE == RibbonServer.SYS_STATES.MAINTAINING || RibbonServer.CURR_STATE == RibbonServer.SYS_STATES.INIT || RibbonServer.CURR_STATE == RibbonServer.SYS_STATES.CLOSING) {
             RibbonServer.logAppend(LOG_ID, 1, "неможливо випустити повідомлення, система не готова!");
             return "RIBBON_ERROR:Система не готова!";
         } else {
-           Integer failedIndex = AccessHandler.checkAccessForAll(givenMessage.AUTHOR, givenMessage.DIRS, 1);
+           Integer failedIndex = AccessHandler.checkAccessForAll(givenMessage.getAuthor(), givenMessage.getDirectories(), 1);
             if (failedIndex != null) {
-                return "RIBBON_ERROR:Помилка доступу до напрямку " + givenMessage.DIRS[failedIndex];
+                return "RIBBON_ERROR:Помилка доступу до напрямку " + givenMessage.getDirectories()[failedIndex];
             }
-            if (givenMessage.ORIG_INDEX.equals("-1")) {
-                givenMessage.ORIG_AUTHOR = givenMessage.AUTHOR;
+            if (givenMessage.getPreviousIndex().equals("-1")) {
+                givenMessage.setPreviousAuthor(givenMessage.getAuthor());
             } else {
-                givenMessage.ORIG_AUTHOR = Messenger.getMessageEntryByIndex(givenMessage.ORIG_INDEX).AUTHOR;
+                givenMessage.setPreviousAuthor(Messenger.getMessageEntryByIndex(givenMessage.getPreviousIndex()).getAuthor());
             }
             Messenger.addMessageToIndex(givenMessage);
-            if (RibbonServer.IO_ENABLED && IOControl.dispathcer.checkExport(givenMessage.DIRS)) {
+            if (RibbonServer.IO_ENABLED && IOControl.dispathcer.checkExport(givenMessage.getDirectories())) {
                 IOControl.dispathcer.initExport(givenMessage);
             }
-            writeMessage(givenMessage.DIRS, givenMessage.INDEX, givenMessage.CONTENT);
-            givenMessage.CONTENT = null;
+            writeMessage(givenMessage.getDirectories(), givenMessage.getIndex(), givenMessage.getContent());
+            givenMessage.setContent(null);
             IndexReader.appendToBaseIndex(givenMessage.returnEntry().toCsv());
-            for (Integer dirIndex = 0; dirIndex < givenMessage.DIRS.length; dirIndex++) {
-                if (givenMessage.DIRS[dirIndex] == null) {
-                    RibbonServer.logAppend(LOG_ID, 1, "неможливо випустити повідомлення" + givenMessage.HEADER + "на напрямок " + givenMessage.DIRS[dirIndex]);
+            for (Integer dirIndex = 0; dirIndex < givenMessage.getDirectories().length; dirIndex++) {
+                if (givenMessage.getDirectories()[dirIndex] == null) {
+                    RibbonServer.logAppend(LOG_ID, 1, "неможливо випустити повідомлення" + givenMessage.getHeader() + "на напрямок " + givenMessage.getDirectories()[dirIndex]);
                 } else {
-                    RibbonServer.logAppend(LOG_ID, 3, givenMessage.DIRS[dirIndex] + " додано повідомлення: [" + givenMessage.HEADER + "]");
+                    RibbonServer.logAppend(LOG_ID, 3, givenMessage.getDirectories()[dirIndex] + " додано повідомлення: [" + givenMessage.getHeader() + "]");
                 }
             }
             return "OK:";
@@ -105,11 +105,11 @@ public class Procedures {
      * @param newMessage override template message;
      * @since RibbonServer a2
      */
-    public static synchronized void PROC_MODIFY_MESSAGE(MessageClasses.MessageEntry oldMessage, MessageClasses.Message newMessage) {
-        makeCleanup(oldMessage.DIRS, newMessage.DIRS, oldMessage.INDEX);
+    public static synchronized void PROC_MODIFY_MESSAGE(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry oldMessage, tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message newMessage) {
+        makeCleanup(oldMessage.getDirectories(), newMessage.getDirectories(), oldMessage.getIndex());
         Messenger.modTagIndex(oldMessage, oldMessage);
         oldMessage.modifyMessageEntry(newMessage);
-        writeMessage(oldMessage.DIRS, oldMessage.INDEX, newMessage.CONTENT);
+        writeMessage(oldMessage.getDirectories(), oldMessage.getIndex(), newMessage.getContent());
         IndexReader.updateBaseIndex();
     }
     
@@ -143,9 +143,9 @@ public class Procedures {
      * @param givenEntry entry to delete
      * @since RibbonServer a1
      */
-    public static synchronized void PROC_DELETE_MESSAGE(MessageClasses.MessageEntry givenEntry) {
-        for (Integer pathIndex = 0; pathIndex < givenEntry.DIRS.length; pathIndex++) {
-            String currPath = Directories.getDirPath(givenEntry.DIRS[pathIndex]) + givenEntry.INDEX;
+    public static synchronized void PROC_DELETE_MESSAGE(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry givenEntry) {
+        for (Integer pathIndex = 0; pathIndex < givenEntry.getDirectories().length; pathIndex++) {
+            String currPath = Directories.getDirPath(givenEntry.getDirectories()[pathIndex]) + givenEntry.getIndex();
             try {
                 java.nio.file.Files.delete(new java.io.File(currPath).toPath());
             } catch (java.io.IOException ex) {
@@ -153,7 +153,7 @@ public class Procedures {
             }
         }
         Messenger.deleteMessageEntryFromIndex(givenEntry);
-        RibbonServer.logAppend(LOG_ID, 3, "повідомлення за індексом " + givenEntry.INDEX + " вилучено з системи.");
+        RibbonServer.logAppend(LOG_ID, 3, "повідомлення за індексом " + givenEntry.getIndex() + " вилучено з системи.");
     }
     
     /**
@@ -162,7 +162,7 @@ public class Procedures {
      */
     public static void postInitMessage() {
         String formatLine = "======================================================================================";
-        PROC_POST_MESSAGE(new MessageClasses.Message(
+        PROC_POST_MESSAGE(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message(
             "Системне повідомлення",
             "root",
             "UA",
@@ -191,7 +191,7 @@ public class Procedures {
             for (StackTraceElement element : stackTrace) {
                 exMesgBuf.append(element.toString() + "\n");
             }
-            MessageClasses.Message exMessage = new MessageClasses.Message(
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message exMessage = new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message(
                     "Звіт про помилку", "root", "UA", new String[] {RibbonServer.DEBUG_POST_DIR}, 
                     new String[] {"СТРІЧКА", "ПОМИЛКИ"}, exMesgBuf.toString());
             Procedures.PROC_POST_MESSAGE(exMessage);

@@ -187,12 +187,12 @@ public class Plain extends Import.Importer {
                 //(2) File removing stage
                 stage = 2;
                 java.nio.file.Files.delete(currFile.toPath());
-                MessageClasses.Message plainMessage = new MessageClasses.Message(
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message plainMessage = new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message(
                         currFile.getName(), "root", "UKN", new String[] {currConfig.getProperty("plain_dir")}, new String[] {"тест"}, 
                         fileContent);
-                plainMessage.PROPERTIES.add(new MessageClasses.MessageProperty("IMPORT_PLAIN", "root", this.importerPrint));
+                plainMessage.getProperties().add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty("IMPORT_PLAIN", "root", this.importerPrint));
                 if (this.currConfig.containsKey("plain_copyright_override")) {
-                    plainMessage.PROPERTIES.add(new MessageClasses.MessageProperty("COPYRIGHT", "root", currConfig.getProperty("plain_copyright_override")));
+                    plainMessage.getProperties().add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty("COPYRIGHT", "root", currConfig.getProperty("plain_copyright_override")));
                 }
                 IOControl.serverWrapper.addMessage(this.importerName, "PLAIN", plainMessage);
                 //Log this event if such behavior specified by config.

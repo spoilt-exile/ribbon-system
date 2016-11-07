@@ -199,7 +199,7 @@ public class RibbonProtocol {
         this.RIBBON_COMMANDS.add(new CommandLet("RIBBON_NCTL_LOGIN", CONNECTION_TYPES.ANY) {
           @Override
           public String exec(String args) {
-              String[] parsedArgs = Generic.CsvFormat.commonParseLine(args, 2);
+              String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 2);
               if (!RibbonServer.ACCESS_ALLOW_MULTIPLIE_LOGIN && SessionManager.isAlreadyLogined(parsedArgs[0])) {
                   return "RIBBON_ERROR:Користувач " + parsedArgs[0] + " вже увійшов до системи!";
               }
@@ -288,7 +288,7 @@ public class RibbonProtocol {
                 } else if (CURR_SESSION.USER_NAME == null) {
                     return "RIBBON_ERROR:Вхід не виконано!";
                 }
-                String[] parsedArgs = Generic.CsvFormat.commonParseLine(args, 2);
+                String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 2);
                 if (CURR_TYPE == CONNECTION_TYPES.CONTROL && (!AccessHandler.isUserIsMemberOf(parsedArgs[0], "ADM"))) {
                     return "RIBBON_ERROR:Користувач " + parsedArgs[0] + " не є адміністратором системи.";
                 }
@@ -313,8 +313,8 @@ public class RibbonProtocol {
         this.RIBBON_COMMANDS.add(new CommandLet("RIBBON_NCTL_GET_USERNAME", CONNECTION_TYPES.ANY) {
             public String exec(String args) {
                 if (CURR_SESSION.USER_NAME != null) {
-                    UserClasses.UserEntry curr = AccessHandler.getEntryByName(CURR_SESSION.USER_NAME);
-                    return "OK:{" + curr.USER_NAME + "},{" + curr.COMM + "}," + Generic.CsvFormat.renderGroup(curr.GROUPS);
+                    tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User curr = AccessHandler.getEntryByName(CURR_SESSION.USER_NAME);
+                    return "OK:{" + curr.getLogin() + "},{" + curr.getDescription() + "}," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(curr.getGroups());
                 } else {
                     return "RIBBON_ERROR:Вхід до системи не виконано!";
                 }
@@ -359,14 +359,14 @@ public class RibbonProtocol {
                 } else if (!IS_REMOTE) {
                     return "RIBBON_ERROR:Видалений режим вимкнено!";
                 }
-                UserClasses.UserEntry overUser = AccessHandler.getEntryByName(Generic.CsvFormat.commonParseLine(args, 1)[0]);
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User overUser = AccessHandler.getEntryByName(tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 1)[0]);
                 if (overUser == null) {
                     return "RIBBON_ERROR:Користувача не знайдено!";
-                } else if (!overUser.IS_ENABLED) {
+                } else if (!overUser.isEnabled()) {
                     return "RIBBON_ERROR:Користувача заблоковано!";
                 }
                 String oldUserName = CURR_SESSION.USER_NAME;
-                CURR_SESSION.USER_NAME = overUser.USER_NAME;
+                CURR_SESSION.USER_NAME = overUser.getLogin();
                 CURR_SESSION.printLnToPeer("PROCEED:");
                 String subResult = null;
                 try {
@@ -456,9 +456,9 @@ public class RibbonProtocol {
         this.RIBBON_COMMANDS.add(new CommandLet("RIBBON_POST_MESSAGE", CONNECTION_TYPES.CLIENT) {
             @Override
             public String exec(String args) {
-                MessageClasses.Message recievedMessage = new MessageClasses.Message();
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message recievedMessage = new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message();
                 recievedMessage.createMessageForPost(args);
-                recievedMessage.AUTHOR = CURR_SESSION.USER_NAME;
+                recievedMessage.setAuthor(CURR_SESSION.USER_NAME);
                 Boolean collectMessage = true;
                 StringBuffer messageBuffer = new StringBuffer();
                 String inLine;
@@ -475,7 +475,7 @@ public class RibbonProtocol {
                         return "RIBBON_ERROR:Неможливо прочитати повідомлення з сокету!";
                     }
                 }
-                recievedMessage.CONTENT = messageBuffer.toString();
+                recievedMessage.setContent(messageBuffer.toString());
                 String answer = Procedures.PROC_POST_MESSAGE(recievedMessage);
                 if (answer.equals("OK:")) {
                     BROADCAST_TAIL = "RIBBON_UCTL_LOAD_INDEX:" + recievedMessage.returnEntry().toCsv();
@@ -495,14 +495,14 @@ public class RibbonProtocol {
             @Override
             public String exec(String args) {
                 if (IS_REMOTE) {
-                    java.util.ArrayList<String[]> parsed = Generic.CsvFormat.complexParseLine(args, 4, 1);
+                    java.util.ArrayList<String[]> parsed = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.complexParseLine(args, 4, 1);
                     Directories.PseudoDirEntry currPostPseudo = Directories.getPseudoDir(parsed.get(0)[0]);
                     if (currPostPseudo == null) {
                         return "RIBBON_ERROR:Псевдонапрямок " + parsed.get(0)[0] + " не існує.";
                     }
                     String[] postDirs = currPostPseudo.getinternalDirectories();
-                    String commandToPost = "RIBBON_POST_MESSAGE:-1," + Generic.CsvFormat.renderGroup(postDirs) + args.substring(currPostPseudo.PSEUDO_DIR_NAME.length() + 2);
-                    RibbonServer.logAppend(LOG_ID, 3, "додано повідомлення через псевдонапрямок '" + currPostPseudo.PSEUDO_DIR_NAME + "'");
+                    String commandToPost = "RIBBON_POST_MESSAGE:-1," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(postDirs) + args.substring(currPostPseudo.getName().length() + 2);
+                    RibbonServer.logAppend(LOG_ID, 3, "додано повідомлення через псевдонапрямок '" + currPostPseudo.getName() + "'");
                     return process(commandToPost);
                 } else {
                     return "RIBBON_ERROR:Видалений режим вимкнено!";
@@ -556,9 +556,9 @@ public class RibbonProtocol {
                 StringBuffer messageBuffer = new StringBuffer();
                 String inLine;
                 Boolean collectMessage = true;
-                String[] parsedArgs = Generic.CsvFormat.splitCsv(args);
-                MessageClasses.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(parsedArgs[0]);
-                MessageClasses.Message modTemplate = new MessageClasses.Message();
+                String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.splitCsv(args);
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(parsedArgs[0]);
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message modTemplate = new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message();
                 modTemplate.createMessageForModify(parsedArgs[1]);
                 while (collectMessage) {
                     try {
@@ -573,18 +573,18 @@ public class RibbonProtocol {
                         return "RIBBON_ERROR:Неможливо прочитати повідомлення з сокету!";
                     }
                 }
-                modTemplate.CONTENT = messageBuffer.toString();
+                modTemplate.setContent(messageBuffer.toString());
                 if (matchedEntry == null) {
                     return "RIBBON_ERROR:Повідмолення не існує!";
                 }
-                Integer oldIntFlag = AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.DIRS, 2);
-                Integer newIntFlag = AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, modTemplate.DIRS, 1);
-                if ((CURR_SESSION.USER_NAME.equals(matchedEntry.AUTHOR) && (newIntFlag == null)) || ((oldIntFlag == null) && (newIntFlag == null))) {
-                    for (Integer dirIndex = 0; dirIndex < matchedEntry.DIRS.length; dirIndex++) {
-                        if (AccessHandler.checkAccess(CURR_SESSION.USER_NAME, matchedEntry.DIRS[dirIndex], 1) == true) {
+                Integer oldIntFlag = AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.getDirectories(), 2);
+                Integer newIntFlag = AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, modTemplate.getDirectories(), 1);
+                if ((CURR_SESSION.USER_NAME.equals(matchedEntry.getAuthor()) && (newIntFlag == null)) || ((oldIntFlag == null) && (newIntFlag == null))) {
+                    for (Integer dirIndex = 0; dirIndex < matchedEntry.getDirectories().length; dirIndex++) {
+                        if (AccessHandler.checkAccess(CURR_SESSION.USER_NAME, matchedEntry.getDirectories()[dirIndex], 1) == true) {
                             continue;
                         } else {
-                            return "RIBBON_ERROR:Помилка доступу до напрямку " + matchedEntry.DIRS[dirIndex] +  ".";
+                            return "RIBBON_ERROR:Помилка доступу до напрямку " + matchedEntry.getDirectories()[dirIndex] +  ".";
                         }
                     }
                     Procedures.PROC_MODIFY_MESSAGE(matchedEntry, modTemplate);
@@ -593,9 +593,9 @@ public class RibbonProtocol {
                     return "OK:";
                 } else {
                     if (oldIntFlag != null) {
-                        return "RIBBON_ERROR:Помилка доступу до напрямку " + matchedEntry.DIRS[oldIntFlag] +  ".";
+                        return "RIBBON_ERROR:Помилка доступу до напрямку " + matchedEntry.getDirectories()[oldIntFlag] +  ".";
                     } else {
-                        return "RIBBON_ERROR:Помилка доступу до напрямку " + modTemplate.DIRS[newIntFlag] +  ".";
+                        return "RIBBON_ERROR:Помилка доступу до напрямку " + modTemplate.getDirectories()[newIntFlag] +  ".";
                     }
                 }
             }
@@ -611,13 +611,13 @@ public class RibbonProtocol {
             @Override
             public String exec(String args) {
                 if (IS_REMOTE) {
-                    java.util.ArrayList<String[]> parsed = Generic.CsvFormat.complexParseLine(args, 5, 1);
+                    java.util.ArrayList<String[]> parsed = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.complexParseLine(args, 5, 1);
                     Directories.PseudoDirEntry currPostPseudo = Directories.getPseudoDir(parsed.get(0)[1]);
                     if (currPostPseudo == null) {
                         return "RIBBON_ERROR:Псевдонапрямок " + parsed.get(0)[1] + " не існує.";
                     }
                     String[] postDirs = currPostPseudo.getinternalDirectories();
-                    String commandToPost = "RIBBON_MODIFY_MESSAGE:" + parsed.get(0)[0] + "," + Generic.CsvFormat.renderGroup(postDirs) + args.substring(currPostPseudo.PSEUDO_DIR_NAME.length() + 13);
+                    String commandToPost = "RIBBON_MODIFY_MESSAGE:" + parsed.get(0)[0] + "," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(postDirs) + args.substring(currPostPseudo.getName().length() + 13);
                     return process(commandToPost);
                 } else {
                     return "RIBBON_ERROR:Видалений режим вимкнено!";
@@ -632,13 +632,13 @@ public class RibbonProtocol {
         this.RIBBON_COMMANDS.add(new CommandLet("RIBBON_DELETE_MESSAGE", CONNECTION_TYPES.CLIENT) {
             @Override
             public String exec(String args) {
-                MessageClasses.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(args);
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(args);
                 if (matchedEntry == null) {
                     return "RIBBON_ERROR:Повідмолення не існує!";
                 } else {
-                    if (matchedEntry.AUTHOR.equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.DIRS, 2) == null)) {
+                    if (matchedEntry.getAuthor().equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.getDirectories(), 2) == null)) {
                         Procedures.PROC_DELETE_MESSAGE(matchedEntry);
-                        BROADCAST_TAIL = "RIBBON_UCTL_DELETE_INDEX:" + matchedEntry.INDEX;
+                        BROADCAST_TAIL = "RIBBON_UCTL_DELETE_INDEX:" + matchedEntry.getIndex();
                         BROADCAST_TYPE = CONNECTION_TYPES.CLIENT;
                         return "OK:";
                     } else {
@@ -655,18 +655,18 @@ public class RibbonProtocol {
         this.RIBBON_COMMANDS.add(new CommandLet("RIBBON_ADD_MESSAGE_PROPERTY", CONNECTION_TYPES.CLIENT) {
             @Override
             public String exec(String args) {
-                String[] parsedArgs = Generic.CsvFormat.commonParseLine(args, 3);
-                MessageClasses.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(parsedArgs[0]);
+                String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 3);
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(parsedArgs[0]);
                 if (matchedEntry == null) {
                     return "RIBBON_ERROR:Повідмолення не існує!";
                 }
-                if ((matchedEntry.AUTHOR.equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.DIRS, 2) != null))) {
-                    MessageClasses.MessageProperty newProp = new MessageClasses.MessageProperty(parsedArgs[1], CURR_SESSION.USER_NAME, parsedArgs[2]);
-                    newProp.TYPE = parsedArgs[1];
-                    newProp.TEXT_MESSAGE = parsedArgs[2];
-                    newProp.DATE = RibbonServer.getCurrentDate();
-                    newProp.USER = CURR_SESSION.USER_NAME;
-                    matchedEntry.PROPERTIES.add(newProp);
+                if ((matchedEntry.getAuthor().equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.getDirectories(), 2) != null))) {
+                    tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty newProp = new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty(parsedArgs[1], CURR_SESSION.USER_NAME, parsedArgs[2]);
+                    newProp.setType(parsedArgs[1]);
+                    newProp.setDescription(parsedArgs[2]);
+                    newProp.setDate(RibbonServer.getCurrentDate());
+                    newProp.setUser(CURR_SESSION.USER_NAME);
+                    matchedEntry.getProperties().add(newProp);
                     IndexReader.updateBaseIndex();
                     BROADCAST_TAIL = "RIBBON_UCTL_UPDATE_INDEX:" + matchedEntry.toCsv();
                     BROADCAST_TYPE = CONNECTION_TYPES.CLIENT;
@@ -684,23 +684,23 @@ public class RibbonProtocol {
         this.RIBBON_COMMANDS.add(new CommandLet("RIBBON_DEL_MESSAGE_PROPERTY", CONNECTION_TYPES.CLIENT) {
             @Override
             public String exec(String args) {
-                String[] parsedArgs = Generic.CsvFormat.commonParseLine(args, 3);
-                MessageClasses.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(parsedArgs[0]);
+                String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 3);
+                tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(parsedArgs[0]);
                 if (matchedEntry == null) {
                     return "RIBBON_ERROR:Повідмолення не існує!";
                 }
-                if ((matchedEntry.AUTHOR.equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.DIRS, 2) != null))) {
-                    MessageClasses.MessageProperty findedProp = null;
-                    java.util.ListIterator<MessageClasses.MessageProperty> propIter = matchedEntry.PROPERTIES.listIterator();
+                if ((matchedEntry.getAuthor().equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.getDirectories(), 2) != null))) {
+                    tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty findedProp = null;
+                    java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty> propIter = matchedEntry.getProperties().listIterator();
                     while (propIter.hasNext()) {
-                        MessageClasses.MessageProperty currProp = propIter.next();
-                        if (currProp.TYPE.equals(parsedArgs[1]) && currProp.DATE.equals(parsedArgs[2])) {
+                        tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty currProp = propIter.next();
+                        if (currProp.getType().equals(parsedArgs[1]) && currProp.getDate().equals(parsedArgs[2])) {
                             findedProp = currProp;
                             break;
                         }
                     }
                     if (findedProp != null) {
-                        matchedEntry.PROPERTIES.remove(findedProp);
+                        matchedEntry.getProperties().remove(findedProp);
                         IndexReader.updateBaseIndex();
                         BROADCAST_TAIL = "RIBBON_UCTL_UPDATE_INDEX:" + matchedEntry.toCsv();
                         BROADCAST_TYPE = CONNECTION_TYPES.CLIENT;
@@ -736,7 +736,7 @@ public class RibbonProtocol {
      * @since RibbonServer a1
      */
     public String process(String input) {
-        String[] parsed = Generic.CsvFormat.parseDoubleStruct(input);
+        String[] parsed = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.parseDoubleStruct(input);
         return this.launchCommand(parsed[0], parsed[1]);
     }
     

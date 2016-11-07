@@ -19,7 +19,7 @@
 
 package ImportModules;
 
-import MessageClasses.Message;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message;
 import java.util.Properties;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
@@ -89,9 +89,9 @@ public class ReportSender {
         message.setFrom(new InternetAddress(fromAddress));
         message.addRecipient(javax.mail.Message.RecipientType.TO, recipient);
         message.setHeader("X-Mailer", "Ribbon System ImportMail reporting module");
-        message.setSubject("СТРІЧКА: повідомлення №" + exportedMessage.INDEX + " прийнято до системи");
-        message.setContent("Ваше повідомлення \'" + exportedMessage.HEADER + "\' вдало випущено у систему за усіма напрямками"
-                + "і йому призначено номер " + exportedMessage.INDEX + ".\n\n--\nСистема \'СТРІЧКА\'" , "text/plain; charset=UTF-8");
+        message.setSubject("СТРІЧКА: повідомлення №" + exportedMessage.getIndex() + " прийнято до системи");
+        message.setContent("Ваше повідомлення \'" + exportedMessage.getHeader() + "\' вдало випущено у систему за усіма напрямками"
+                + "і йому призначено номер " + exportedMessage.getIndex() + ".\n\n--\nСистема \'СТРІЧКА\'" , "text/plain; charset=UTF-8");
         Transport.send(message);
     }
     

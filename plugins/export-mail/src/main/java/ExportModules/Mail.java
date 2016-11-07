@@ -44,7 +44,7 @@ public class Mail extends Export.Exporter {
      * @param givenSwitch message index updater switch;
      * @param givenDir dir which message came from;
      */
-    public Mail(MessageClasses.Message givenMessage, Export.Schema givenSchema, Export.ReleaseSwitch givenSwitch, String givenDir) {
+    public Mail(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, Export.Schema givenSchema, Export.ReleaseSwitch givenSwitch, String givenDir) {
         super(givenMessage, givenSchema, givenSwitch, givenDir);
     }
 
@@ -106,7 +106,7 @@ public class Mail extends Export.Exporter {
                 message.setSubject(this.currSchema.currConfig.getProperty("mail_subject"), exportedCharset);
             }
         } else {
-            message.setSubject(this.exportedMessage.HEADER, exportedCharset);
+            message.setSubject(this.exportedMessage.getHeader(), exportedCharset);
         }
         message.setHeader("X-Mailer", "Ribbon System ExportMail module");
         message.setContent(this.exportedContent.getBytes(exportedCharset), "text/plain; charset=" + exportedCharset);

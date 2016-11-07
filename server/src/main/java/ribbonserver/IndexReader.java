@@ -46,13 +46,13 @@ public abstract class IndexReader {
      * @see Directories.dirSchema
      * @since RibbonServer a1
      */
-    public static java.util.ArrayList<DirClasses.DirSchema> readDirectories() {
-        java.util.ArrayList<DirClasses.DirSchema> Dirs = new java.util.ArrayList<>();
+    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readDirectories() {
+        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> Dirs = new java.util.ArrayList<>();
         java.io.BufferedReader dirIndexReader = null;
         try {
             dirIndexReader = new java.io.BufferedReader(new java.io.FileReader(RibbonServer.BASE_PATH + "/" + RibbonServer.DIR_INDEX_PATH));
             while (dirIndexReader.ready()) {
-                Dirs.add(new DirClasses.DirSchema(dirIndexReader.readLine()));
+                Dirs.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema(dirIndexReader.readLine()));
             }
         } catch (java.io.FileNotFoundException ex) {
             RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу напрявків не знайдено. Створюю новий.");
@@ -70,7 +70,7 @@ public abstract class IndexReader {
                 dirIndexWriter = new java.io.FileWriter(dirIndexFile);
                 for (String defString: defaultDirs) {
                     dirIndexWriter.write(defString + "\n");
-                    Dirs.add(new DirClasses.DirSchema(defString));
+                    Dirs.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema(defString));
                 }
             } catch (java.io.IOException exq) {
                 RibbonServer.logAppend(LOG_ID, 0, "неможливо створити новий файл індексу напрямків!");
@@ -106,13 +106,13 @@ public abstract class IndexReader {
      * @return arrayList of users entries
      * @since RibbonServer a1
      */
-    public static java.util.ArrayList<UserClasses.UserEntry> readUsers() {
-        java.util.ArrayList<UserClasses.UserEntry> returnedUsers = new java.util.ArrayList<>();
+    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> readUsers() {
+        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> returnedUsers = new java.util.ArrayList<>();
         java.io.BufferedReader userIndexReader = null;
         try {
             userIndexReader = new java.io.BufferedReader(new java.io.FileReader(RibbonServer.BASE_PATH + "/" + RibbonServer.USERS_INDEX_PATH));
             while (userIndexReader.ready()) {
-                returnedUsers.add(new UserClasses.UserEntry(userIndexReader.readLine()));
+                returnedUsers.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User(userIndexReader.readLine()));
             }
         } catch (java.io.FileNotFoundException ex) {
             RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу користувачів не знайдено. Створюю новий.");
@@ -123,8 +123,8 @@ public abstract class IndexReader {
                 usersIndexWriter = new java.io.FileWriter(usersIndexFile);
                 usersIndexWriter.write("{root},{Root administrator, pass: root},[ADM],63a9f0ea7bb98050796b649e85481845,1\n");
                 usersIndexWriter.write("{test},{Test user, pass: test},[test],098f6bcd4621d373cade4e832627b4f6,1\n");
-                returnedUsers.add(new UserClasses.UserEntry("{root},{Root administrator, pass: root},[ADM],63a9f0ea7bb98050796b649e85481845,1"));
-                returnedUsers.add(new UserClasses.UserEntry("{test},{Test user, pass: test},[test],098f6bcd4621d373cade4e832627b4f6,1"));
+                returnedUsers.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User("{root},{Root administrator, pass: root},[ADM],63a9f0ea7bb98050796b649e85481845,1"));
+                returnedUsers.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User("{test},{Test user, pass: test},[test],098f6bcd4621d373cade4e832627b4f6,1"));
             } catch (java.io.IOException exq) {
                 RibbonServer.logAppend(LOG_ID, 0, "неможливо створити новий файл індексу користувачів!");
                 System.exit(5);
@@ -159,13 +159,13 @@ public abstract class IndexReader {
      * @return arrayList of groups entries
      * @since RibbonServer a2
      */
-    public static java.util.ArrayList<UserClasses.GroupEntry> readGroups() {
-        java.util.ArrayList<UserClasses.GroupEntry> returnedGroups = new java.util.ArrayList<>();
+    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup> readGroups() {
+        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup> returnedGroups = new java.util.ArrayList<>();
         java.io.BufferedReader groupIndexReader = null;
         try {
             groupIndexReader = new java.io.BufferedReader(new java.io.FileReader(RibbonServer.BASE_PATH + "/" + RibbonServer.GROUPS_INDEX_PATH));
             while (groupIndexReader.ready()) {
-                returnedGroups.add(new UserClasses.GroupEntry(groupIndexReader.readLine()));
+                returnedGroups.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup(groupIndexReader.readLine()));
             }
         } catch (java.io.FileNotFoundException ex) {
             RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу груп не знайдено. Створюю новий.");
@@ -175,7 +175,7 @@ public abstract class IndexReader {
                 usersIndexFile.createNewFile();
                 groupIndexWriter = new java.io.FileWriter(usersIndexFile);
                 groupIndexWriter.write("{test},{Test group}\n");
-                returnedGroups.add(new UserClasses.GroupEntry("{test},{Test group}"));
+                returnedGroups.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup("{test},{Test group}"));
             } catch (java.io.IOException exq) {
                 RibbonServer.logAppend(LOG_ID, 0, "неможливо створити новий файл індексу груп!");
                 System.exit(5);
@@ -210,13 +210,13 @@ public abstract class IndexReader {
      * @return arraylist with index entries
      * @since RibbonServer a1
      */
-    public static java.util.ArrayList<MessageClasses.MessageEntry> readBaseIndex() {
-        java.util.ArrayList<MessageClasses.MessageEntry> returnedIndex = new java.util.ArrayList<>();
+    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry> readBaseIndex() {
+        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry> returnedIndex = new java.util.ArrayList<>();
         java.io.BufferedReader baseIndexReader = null;
         try {
             baseIndexReader = new java.io.BufferedReader(new java.io.FileReader(RibbonServer.BASE_PATH + "/" + RibbonServer.BASE_INDEX_PATH));
             while (baseIndexReader.ready()) {
-                returnedIndex.add(new MessageClasses.MessageEntry(baseIndexReader.readLine()));
+                returnedIndex.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry(baseIndexReader.readLine()));
             }
         } catch (java.io.FileNotFoundException ex) {
             RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу бази не знайдено. Створюю новий.");
@@ -347,7 +347,7 @@ public abstract class IndexReader {
             @Override
             public void run() {
                 synchronized (BASE_LOCK) {
-                    java.util.ListIterator<MessageClasses.MessageEntry> storeIter = Messenger.messageIndex.listIterator();
+                    java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry> storeIter = Messenger.messageIndex.listIterator();
                     StringBuffer contentBuf = new StringBuffer();
                     while (storeIter.hasNext()) {
                         contentBuf.append(storeIter.next().toCsv());
