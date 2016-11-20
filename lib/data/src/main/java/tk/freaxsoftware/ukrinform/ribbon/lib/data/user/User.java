@@ -20,14 +20,31 @@
 package tk.freaxsoftware.ukrinform.ribbon.lib.data.user;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVAble;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVDefinition;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVFields;
+import tk.freaxsoftware.extras.faststorage.generic.EntityListReference;
+import tk.freaxsoftware.extras.faststorage.reading.EntityReader;
+import tk.freaxsoftware.extras.faststorage.writing.EntityWriter;
 
 /**
  * User object in system. 
  * Contains all user properties.
  * @author Stanislav Nepochatov <spoilt.exile@gmail.com>
  */
-public class User extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder {
+public class User implements ECSVAble<String> {
+    
+    public static final String TYPE = "RIBBON_USER";
+    
+    public static final ECSVDefinition DEFINITION = ECSVDefinition.createNew()
+            .addKey(String.class)
+            .addPrimitive(ECSVFields.PR_STRING)
+            .addPrimitive(ECSVFields.PR_STRING)
+            .addReferenceArray(UserGroup.class, String.class)
+            .addPrimitive(ECSVFields.PR_BOOLEAN)
+            .addMap(null, null);
     
     /**
      * User name
@@ -50,7 +67,7 @@ public class User extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElde
      * Array with groups
      * @since RibbonServer a2
      */
-    private String[] groups;
+    private EntityListReference<UserGroup, String> groups;
 
     /**
      * State of users account
@@ -59,22 +76,82 @@ public class User extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElde
     private Boolean enabled;
     
     /**
-     * a2 endian constructor
-     * @param givenCsv csv raw line
-     * @since RibbonServer a2
+     * Map of optional attributes.
      */
-    public User(String givenCsv) {
-        this.baseCount = 4;
-        this.groupCount = 1;
-        this.currentFormat = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder.csvFormatType.ComplexCsv;
-        java.util.ArrayList<String[]> parsedStruct = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.fromCsv(this, givenCsv);
-        String[] baseArray = parsedStruct.get(0);
-        String[] groupsArray = parsedStruct.get(1);
-        login = baseArray[0];
-        description = baseArray[1];
-        password = baseArray[2];
-        enabled = baseArray[3].equals("1") ? true : false;
-        groups = groupsArray;
+    private Map<String, String> attrs;
+
+    /**
+     * Empty constructor.
+     */
+    public User() {
+    }
+
+    /**
+     * Parametr constructor.
+     * @param login user login;
+     * @param password hashsum of the password;
+     * @param description optional description for user;
+     * @param groups user groups reference;
+     * @param enabled user enable flag;
+     * @param attrs attribute map;
+     */
+    public User(String login, String password, String description, String[] groups, Boolean enabled, Map<String, String> attrs) {
+        this.login = login;
+        this.password = password;
+        this.description = description;
+        this.groups = new EntityListReference<>(Arrays.asList(groups), UserGroup.class, false);
+        this.enabled = enabled;
+        this.attrs = attrs;
+    }
+    
+    @Override
+    public String getEntityType() {
+        return TYPE;
+    }
+
+    @Override
+    public String getKey() {
+        return login;
+    }
+
+    @Override
+    public void setKey(String key) {
+        //Do nothing
+    }
+
+    @Override
+    public ECSVDefinition getDefinition() {
+        return DEFINITION;
+    }
+
+    @Override
+    public void readFromECSV(EntityReader<String> reader) {
+        this.login = reader.readKey();
+        this.password = reader.readString();
+        this.description = reader.readString();
+        this.groups = reader.readReferenceArray(UserGroup.class);
+        this.enabled = reader.readBoolean();
+        this.attrs = reader.readMap();
+    }
+
+    @Override
+    public void writeToECSV(EntityWriter<String> writer) {
+        writer.writeKey(this.login);
+        writer.writeString(this.password);
+        writer.writeString(this.description);
+        writer.writeReferenceArray(groups);
+        writer.writeBoolean(enabled);
+        writer.writeMap(attrs);
+    }
+
+    @Override
+    public void update(ECSVAble<String> updatedEntity) {
+        User otherUser = (User) updatedEntity;
+        this.password = otherUser.getPassword();
+        this.description = otherUser.getDescription();
+        this.groups = otherUser.getGroups();
+        this.enabled = otherUser.isEnabled();
+        this.attrs = otherUser.getAttrs();
     }
     
     public String getLogin() {
@@ -101,11 +178,11 @@ public class User extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElde
         this.description = description;
     }
 
-    public String[] getGroups() {
+    public EntityListReference<UserGroup, String> getGroups() {
         return groups;
     }
 
-    public void setGroups(String[] groups) {
+    public void setGroups(EntityListReference<UserGroup, String> groups) {
         this.groups = groups;
     }
 
@@ -115,6 +192,14 @@ public class User extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElde
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public Map<String, String> getAttrs() {
+        return attrs;
+    }
+
+    public void setAttrs(Map<String, String> attrs) {
+        this.attrs = attrs;
     }
 
     @Override
@@ -142,10 +227,10 @@ public class User extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElde
         if (!Objects.equals(this.description, other.description)) {
             return false;
         }
-        if (!Arrays.deepEquals(this.groups, other.groups)) {
+        if (!Objects.equals(this.enabled, other.enabled)) {
             return false;
         }
-        if (!Objects.equals(this.enabled, other.enabled)) {
+        if (!Objects.equals(this.attrs, other.attrs)) {
             return false;
         }
         return true;
@@ -153,11 +238,6 @@ public class User extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElde
 
     @Override
     public String toString() {
-        return "UserEntry{" + "login=" + login + ", password=" + password + ", description=" + description + ", groups=" + groups + ", enabled=" + enabled + '}';
-    }
-
-    @Override
-    public String toCsv() {
-        return "{" + this.login + "},{" + this.description + "}," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(groups) + "," + this.password + "," + (enabled ? "1" : "0");
+        return "UserEntry{" + "login=" + login + ", password=" + password + ", description=" + description + ", groups=" + groups + ", enabled=" + enabled + ", attrs=" + attrs + '}';
     }
 }

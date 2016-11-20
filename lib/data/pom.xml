@@ -25,4 +25,11 @@
     <name>Ribbon System :: Libs :: libRibbonData :: ${project.version}</name>
     <description>libRibbonData port;</description>
     <version>a3</version>
+    <dependencies>
+        <dependency>
+            <groupId>tk.freaxsoftware.extras</groupId>
+            <artifactId>faststorage</artifactId>
+            <version>3.0</version>
+        </dependency>
+    </dependencies>
 </project>

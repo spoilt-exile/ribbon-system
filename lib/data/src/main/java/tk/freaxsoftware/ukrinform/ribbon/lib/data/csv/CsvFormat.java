@@ -25,6 +25,7 @@ import java.util.List;
  * Class with some static methods
  * for supporting csv format.
  * @author Stanislav Nepochatov
+ * @deprecated 
  */
 public abstract class CsvFormat {
     

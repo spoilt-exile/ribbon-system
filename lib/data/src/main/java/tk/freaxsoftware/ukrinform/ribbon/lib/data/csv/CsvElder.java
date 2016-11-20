@@ -22,7 +22,7 @@ package tk.freaxsoftware.ukrinform.ribbon.lib.data.csv;
 /**
  * Additional fields and methods to represent
  * data structure as csv formated line.
- * 
+ * @deprecated 
  * @author Stanislav Nepochatov
  */
 public abstract class CsvElder {
