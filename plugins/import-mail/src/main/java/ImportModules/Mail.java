@@ -20,7 +20,7 @@
 package ImportModules;
 
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder;
-import Utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 import com.sun.mail.util.BASE64DecoderStream;
 import com.sun.mail.util.MailSSLSocketFactory;
 import com.sun.mail.util.QPDecoderStream;
@@ -50,8 +50,8 @@ import org.jsoup.Jsoup;
  * Mail POP3 import class.
  * @author Stanislav Nepochatov <spoilt.exile@gmail.com>
  */
-@Utils.RibbonIOModule(type="MAIL", property="IMPORT_MAIL", api_version=1)
-public class Mail extends Import.Importer {
+@tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.RibbonIOModule(type="MAIL", property="IMPORT_MAIL", api_version=1)
+public class Mail extends tk.freaxsoftware.ukrinform.ribbon.lib.io.importer.Importer {
     
     /**
      * Security options enumeration.
@@ -174,7 +174,7 @@ public class Mail extends Import.Importer {
             try {
                 currentSecurity = SECURITY.valueOf(givenConfig.getProperty("mail_pop3_security"));
             } catch (IllegalArgumentException iaex) {
-                IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, "неможливо встановити параметр mail_pop3_con_security: " + givenConfig.getProperty("mail_pop3_security"));
+                IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 1, "неможливо встановити параметр mail_pop3_con_security: " + givenConfig.getProperty("mail_pop3_security"));
             }
         }
 
@@ -182,7 +182,7 @@ public class Mail extends Import.Importer {
             try {
                 currentPostAction = POST_ACTION.valueOf(givenConfig.getProperty("mail_post_action"));
             } catch (IllegalArgumentException iaex) {
-                IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, "неможливо встановити параметр mail_post_action: " + givenConfig.getProperty("mail_post_action"));
+                IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 1, "неможливо встановити параметр mail_post_action: " + givenConfig.getProperty("mail_post_action"));
             }
         }
         
@@ -190,7 +190,7 @@ public class Mail extends Import.Importer {
             try {
                 currentFormat = WHITELIST_FORMAT.valueOf(givenConfig.getProperty("mail_read_whitelist_format"));
             } catch (IllegalArgumentException iaex) {
-                IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, "неможливо встановити параметр mail_read_whitelist_format: " + givenConfig.getProperty("mail_read_whitelist_format"));
+                IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 1, "неможливо встановити параметр mail_read_whitelist_format: " + givenConfig.getProperty("mail_read_whitelist_format"));
             }
         }
 
@@ -206,8 +206,8 @@ public class Mail extends Import.Importer {
         
         //Enable dirty state if there is no address to accept
         if (whitelistRecords.isEmpty()){
-            IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, "немає адрес для прийому повідомлень!");
-            IOControl.serverWrapper.enableDirtyState("MAIL", importerName, importerPrint);
+            IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 1, "немає адрес для прийому повідомлень!");
+            IOControl.getInstance().getServerWrapper().enableDirtyState("MAIL", importerName, importerPrint);
         }
         
         if (sendReport) {
@@ -268,7 +268,7 @@ public class Mail extends Import.Importer {
                     final tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message mailMessage = this.readMail(passedAddr, currMessage, passRecord);
                     if (mailMessage.getContent() != null) {
                         mailMessage.addProperty("root", this.importerName, this.importerPrint);
-                        IOControl.serverWrapper.addMessage(importerName, "MAIL", mailMessage);
+                        IOControl.getInstance().getServerWrapper().addMessage(importerName, "MAIL", mailMessage);
 
                         switch (currentPostAction) {
                             case DELETE:
@@ -287,8 +287,8 @@ public class Mail extends Import.Importer {
                                     try {
                                         sender.sendMessageAsMail(mailMessage, recipientAddress);
                                     } catch (MessagingException ex) {
-                                        IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 0, "Надсилання відповіді завершилось невдачею");
-                                        IOControl.serverWrapper.postException("Надсилання відповіді завершилось невдачею", ex);
+                                        IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 0, "Надсилання відповіді завершилось невдачею");
+                                        IOControl.getInstance().getServerWrapper().postException("Надсилання відповіді завершилось невдачею", ex);
                                     }
                                 }
                             };
@@ -297,10 +297,10 @@ public class Mail extends Import.Importer {
                         
                         //Log this event if such behavior specified by config.
                         if ("1".equals(currConfig.getProperty("opt_log"))) {
-                            IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 3, "прозведено поштового листа від " + passedAddr.getAddress());
+                            IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 3, "прозведено поштового листа від " + passedAddr.getAddress());
                         }
                     } else {
-                        IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, "не вдалося відділити зміст повідомлення: " + currMessage.getSubject() + " - " + currMessage.getSentDate().toString());
+                        IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 1, "не вдалося відділити зміст повідомлення: " + currMessage.getSubject() + " - " + currMessage.getSentDate().toString());
                     }
                 }
             }
@@ -309,8 +309,8 @@ public class Mail extends Import.Importer {
             store.close();
         }
         catch (Exception ex) {
-            IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 0, "Виклик pop3 завершено невдачею");
-            IOControl.serverWrapper.postException("Виклик pop3 завершено невдачею", ex);
+            IOControl.getInstance().getServerWrapper().log(IOControl.getIMPORT_LOGID() + ":" + importerName, 0, "Виклик pop3 завершено невдачею");
+            IOControl.getInstance().getServerWrapper().postException("Виклик pop3 завершено невдачею", ex);
         }
     }
 
@@ -391,7 +391,7 @@ public class Mail extends Import.Importer {
      */
     private void readWhitelist(String filename) {
         try {
-            String[] records = new String(java.nio.file.Files.readAllBytes(new java.io.File(IOControl.IMPORT_DIR + "/" + filename).toPath())).split("\n");
+            String[] records = new String(java.nio.file.Files.readAllBytes(new java.io.File(IOControl.getInstance().getIMPORT_DIR() + "/" + filename).toPath())).split("\n");
             for (String currRecord: records) {
                 if (currentFormat == WHITELIST_FORMAT.NORMAL) {
                     whitelistRecords.put(currRecord, null);
@@ -401,11 +401,11 @@ public class Mail extends Import.Importer {
                     whitelistRecords.put(newRecord.ADDRESS, newRecord);
                 }
             }
-            IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 3, "завантажено список з адресами: " + whitelistRecords.size());
+            IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 3, "завантажено список з адресами: " + whitelistRecords.size());
         } catch (java.io.IOException ex) {
-            IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, 
+            IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getIMPORT_LOGID() + ":" + importerName, 1, 
             "неможливо прочитати список дозволених адрес для прийому - імпорт буде дозволено тільки для адреси з параметра 'mail_read_from'\n"
-            + "Шлях до файлу списку розсилки:" + IOControl.IMPORT_DIR + "/" + filename);
+            + "Шлях до файлу списку розсилки:" + IOControl.getInstance().getIMPORT_DIR() + "/" + filename);
         }
     }
     

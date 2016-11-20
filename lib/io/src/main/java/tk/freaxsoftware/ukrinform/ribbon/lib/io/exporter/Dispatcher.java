@@ -17,9 +17,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Export;
+package tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter;
 
-import Utils.IOControl;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.ModuleContainer;
 
 /**
  * Export dispatcher (exporter factory) class.
@@ -30,22 +37,22 @@ public class Dispatcher {
     /**
      * Path to export modules.
      */
-    public String exportModulePath;
+    public final String exportModulePath;
     
     /**
      * List of export schemas.
      */
-    private java.util.ArrayList<Utils.ModuleContainer> moduleList = new java.util.ArrayList<>();
+    private List<ModuleContainer> moduleList = new ArrayList<>();
     
     /**
      * List of export schemas.
      */
-    private java.util.ArrayList<Schema> schemaList = new java.util.ArrayList<>();
+    private final List<Schema> schemaList = new ArrayList<>();
     
     /**
      * Error quene.
      */
-    private final java.util.ArrayList<Exporter> errQuene = new java.util.ArrayList<>();
+    private final List<Exporter> errQuene = new ArrayList<>();
     
     /**
      * Sync lock for error quene.
@@ -58,7 +65,7 @@ public class Dispatcher {
      * Subsribe hash map has next structure:<br>
      * <b>DIR_NAME, ArrayList(SCHEME_NAME)</b>
      */
-    private java.util.HashMap<String, java.util.ArrayList<String>> subscribes = new java.util.HashMap();
+    private Map<String, List<String>> subscribes = new HashMap();
     
     /**
      * Current error quene worker thread.
@@ -103,11 +110,11 @@ public class Dispatcher {
      */
     public Dispatcher(String givenModulePath, String givenDirPath) {
         exportModulePath = givenModulePath;
-        moduleList = Utils.IOControl.loadModules(givenModulePath);
+        moduleList = IOControl.getInstance().loadModules(givenModulePath);
         java.io.File exportPropsDir = new java.io.File(givenDirPath);
         if (!exportPropsDir.exists()) {
             exportPropsDir.mkdirs();
-            Utils.IOControl.serverWrapper.log(Utils.IOControl.EXPORT_LOGID, 2, "Створюю теку експорту...");
+            IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 2, "Створюю теку експорту...");
         }
         java.io.File[] exportsProps = exportPropsDir.listFiles(new java.io.FilenameFilter() {
 
@@ -125,19 +132,19 @@ public class Dispatcher {
             try {
                 exportConfig.load(new java.io.FileReader(exportFile));
             } catch (java.io.FileNotFoundException ex) {
-                Utils.IOControl.serverWrapper.log(Utils.IOControl.EXPORT_LOGID, 1, "неможливо знайти файл " + exportFile.getName());
+                IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 1, "неможливо знайти файл " + exportFile.getName());
             } catch (java.io.IOException ex) {
-                Utils.IOControl.serverWrapper.log(Utils.IOControl.EXPORT_LOGID, 1, "помилка при зчитуванні файлу " + exportFile.getName());
+                IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 1, "помилка при зчитуванні файлу " + exportFile.getName());
             }
             Schema newExport = getNewSchema(exportConfig);
             if (newExport != null) {
                 this.schemaList.add(newExport);
             } else {
-                Utils.IOControl.serverWrapper.log(Utils.IOControl.EXPORT_LOGID, 2, "заванатження модулю для " + exportFile.getName() + " завершилось з помилкою.");
+                IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 2, "заванатження модулю для " + exportFile.getName() + " завершилось з помилкою.");
             }
         }
         if (this.schemaList.isEmpty()) {
-            Utils.IOControl.serverWrapper.log(Utils.IOControl.EXPORT_LOGID, 2, "система не знайшла жодної схеми экспорту!");
+            IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 2, "система не знайшла жодної схеми экспорту!");
         }
     }
     
@@ -150,7 +157,7 @@ public class Dispatcher {
 	if (givenSchemas == null) {
 	    return;
 	}
-        java.util.ArrayList<String> putList = new java.util.ArrayList();
+        List<String> putList = new ArrayList();
         for (String currScheme : givenSchemas) {
             if (currScheme.isEmpty()) {
                 continue;
@@ -158,7 +165,7 @@ public class Dispatcher {
             if (isSchemaExists(currScheme)) {
                 putList.add(currScheme);
             } else {
-                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID, 2, "схему експорту " + currScheme + " не існує (" + givenDirName + ")");
+                IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 2, "схему експорту " + currScheme + " не існує (" + givenDirName + ")");
             }
         }
         if (!putList.isEmpty()) {
@@ -172,7 +179,7 @@ public class Dispatcher {
      * @return true if existed / false if not.
      */
     private Boolean isSchemaExists(String givenSchema) {
-        java.util.ListIterator<Schema> shIter = this.schemaList.listIterator();
+        ListIterator<Schema> shIter = this.schemaList.listIterator();
         while (shIter.hasNext()) {
             if (shIter.next().name.equals(givenSchema)) {
                 return true;
@@ -187,19 +194,19 @@ public class Dispatcher {
      * @return new reference of Scheme or null if type is uknown;
      */
     private Schema getNewSchema(java.util.Properties givenConfig) {
-        java.util.ListIterator<Utils.ModuleContainer> modIter = this.moduleList.listIterator();
-        Utils.ModuleContainer findedMod = null;
+        ListIterator<ModuleContainer> modIter = this.moduleList.listIterator();
+        ModuleContainer findedMod = null;
         while (modIter.hasNext()) {
-            Utils.ModuleContainer currMod = modIter.next();
-            if (currMod.moduleType.equals(givenConfig.getProperty("export_type"))) {
+            ModuleContainer currMod = modIter.next();
+            if (currMod.getModuleType().equals(givenConfig.getProperty("export_type"))) {
                 findedMod = currMod;
                 break;
             }
         }
         if (findedMod != null) {
-            return new Schema(givenConfig, findedMod.moduleClass);
+            return new Schema(givenConfig, findedMod.getModuleClass());
         } else {
-            Utils.IOControl.serverWrapper.log(Utils.IOControl.EXPORT_LOGID, 2, "неможливо знайти модуль для типу " + givenConfig.getProperty("export_type"));
+            IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 2, "неможливо знайти модуль для типу " + givenConfig.getProperty("export_type"));
         }
         return null;
     }
@@ -222,9 +229,9 @@ public class Dispatcher {
      * Init export sequence.
      * @param exportedMessage message to export;
      */
-    public void initExport(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message exportedMessage) {
+    public void initExport(Message exportedMessage) {
         if (exportedMessage.getProperty("PROCESSING_FORBIDDEN") != null) {
-            IOControl.serverWrapper.log(IOControl.EXPORT_LOGID, 2, "повідомлення " + exportedMessage.getIndex() + " заборонено випускати з системи");
+            IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 2, "повідомлення " + exportedMessage.getIndex() + " заборонено випускати з системи");
             return;
         }
         if (!currWorker.isAlive()) {
@@ -234,7 +241,7 @@ public class Dispatcher {
         for (String currDir : exportedMessage.getDirectories()) {
             if (this.subscribes.containsKey(currDir)) {
                 newSwitch.addSchemas(subscribes.get(currDir));
-                java.util.ListIterator<String> schemeIter = subscribes.get(currDir).listIterator();
+                ListIterator<String> schemeIter = subscribes.get(currDir).listIterator();
                 while (schemeIter.hasNext()) {
                     Schema currSchema = this.getScheme(schemeIter.next());
                     Exporter newExport = currSchema.getNewExportTask(exportedMessage, newSwitch, currDir);
@@ -250,7 +257,7 @@ public class Dispatcher {
      * @return scheme or null.
      */
     private Schema getScheme(String givenName) {
-        java.util.ListIterator<Schema> schemeIter = this.schemaList.listIterator();
+        ListIterator<Schema> schemeIter = this.schemaList.listIterator();
         while (schemeIter.hasNext()) {
             Schema currScheme = schemeIter.next();
             if (currScheme.name.equals(givenName)) {

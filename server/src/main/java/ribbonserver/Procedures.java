@@ -19,7 +19,7 @@
 
 package ribbonserver;
 
-import Utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
  * Main system procedures
@@ -51,8 +51,8 @@ public class Procedures {
                 givenMessage.setPreviousAuthor(Messenger.getMessageEntryByIndex(givenMessage.getPreviousIndex()).getAuthor());
             }
             Messenger.addMessageToIndex(givenMessage);
-            if (RibbonServer.IO_ENABLED && IOControl.dispathcer.checkExport(givenMessage.getDirectories())) {
-                IOControl.dispathcer.initExport(givenMessage);
+            if (RibbonServer.IO_ENABLED && IOControl.getInstance().getDispathcer().checkExport(givenMessage.getDirectories())) {
+                IOControl.getInstance().getDispathcer().initExport(givenMessage);
             }
             writeMessage(givenMessage.getDirectories(), givenMessage.getIndex(), givenMessage.getContent());
             givenMessage.setContent(null);

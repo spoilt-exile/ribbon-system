@@ -19,7 +19,7 @@
 
 package ribbonserver;
 
-import Utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -211,7 +211,7 @@ public final class Directories {
             RibbonServer.logAppend(LOG_ID, 3, "додано напрямок (" + currDir.getFullName() + ": " + currDir.getDescription() + ")");
             createDirs(currDir);
             if (RibbonServer.IO_ENABLED) {
-                IOControl.dispathcer.subscribeDir(currDir.getExportList(), currDir.getFullName());
+                IOControl.getInstance().getDispathcer().subscribeDir(currDir.getExportList(), currDir.getFullName());
             }
         }
         rootDir.deployDir(RibbonServer.BASE_PATH);

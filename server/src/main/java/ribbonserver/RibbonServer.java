@@ -19,7 +19,7 @@
 
 package ribbonserver;
 
-import Utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
  * Main Ribbon server class
@@ -294,19 +294,19 @@ public class RibbonServer {
      * Import quene object.
      * @since RibbonServer a2
      */
-    public static Import.Quene ImportQuene;
+    public static tk.freaxsoftware.ukrinform.ribbon.lib.io.importer.Queue ImportQuene;
     
     /**
      * Export dispatcher object.
      * @since RibbonServer a2
      */
-    public static Export.Dispatcher ExportDispatcher;
+    public static tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Dispatcher ExportDispatcher;
     
     /**
      * System wrapper for system to libRibbonIO communication.
      * @since RibbonServer a2
      */
-    private static class IOWrapper extends Utils.SystemWrapper {
+    private static class IOWrapper extends tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.SystemWrapper {
 
         @Override
         public void log(String logSource, Integer logLevel, String logMessage) {
@@ -330,7 +330,7 @@ public class RibbonServer {
         public void registerPropertyName(String givenName) {
             Boolean result = tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty.Types.registerTypeIfNotExist(givenName);
             if (result) {
-                this.log(IOControl.LOG_ID, 2, "зареєстровано новий тип ознак '" + givenName + "'");
+                this.log(IOControl.getLOG_ID(), 2, "зареєстровано новий тип ознак '" + givenName + "'");
             }
         }
 
@@ -405,12 +405,12 @@ public class RibbonServer {
         setSystemVariables();
         if (IO_ENABLED) {
             logAppend(LOG_ID, 2, "налаштування бібліотек імпорту до системи");
-            Utils.IOControl.initWrapper(new IOWrapper());
-            IOControl.registerPathes(BASE_PATH + "/import/", BASE_PATH + "/export/");
-            ImportQuene = new Import.Quene(CurrentDirectory + "/imports/", BASE_PATH + "/import/");
-            ExportDispatcher = new Export.Dispatcher(CurrentDirectory + "/exports/", BASE_PATH + "/export/");
-            IOControl.registerImport(ImportQuene);
-            IOControl.registerExport(ExportDispatcher);
+            IOControl.getInstance().initWrapper(new IOWrapper());
+            IOControl.getInstance().registerPathes(BASE_PATH + "/import/", BASE_PATH + "/export/");
+            ImportQuene = new tk.freaxsoftware.ukrinform.ribbon.lib.io.importer.Queue(CurrentDirectory + "/imports/", BASE_PATH + "/import/");
+            ExportDispatcher = new tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Dispatcher(CurrentDirectory + "/exports/", BASE_PATH + "/export/");
+            IOControl.getInstance().registerImport(ImportQuene);
+            IOControl.getInstance().registerExport(ExportDispatcher);
         }
         logAppend(LOG_ID, 3, "початок налаштування контролю доступу");
         AccessHandler.init();

@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Utils;
+package tk.freaxsoftware.ukrinform.ribbon.lib.io.utils;
 
 /**
  * Server communication wrapper class.

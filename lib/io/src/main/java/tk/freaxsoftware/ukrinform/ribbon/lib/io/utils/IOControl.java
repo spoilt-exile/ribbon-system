@@ -17,73 +17,104 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Utils;
+package tk.freaxsoftware.ukrinform.ribbon.lib.io.utils;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Dispatcher;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.importer.Queue;
 
 /**
  * IO subsystem general control class.
  * @author Stanislav Nepochatov <spoilt.exile@gmail.com>
  */
-public final class IOControl {
+public class IOControl {
     
     /**
      * Log id for import subsystem.
      */
-    public static String IMPORT_LOGID = "ІМПОРТ";
+    private static final String IMPORT_LOGID = "ІМПОРТ";
     
     /**
      * Log id for export subsystem.
      */
-    public static String EXPORT_LOGID = "ЕКСПОРТ";
+    private static final String EXPORT_LOGID = "ЕКСПОРТ";
+
+    public static String getIMPORT_LOGID() {
+        return IMPORT_LOGID;
+    }
+
+    public static String getEXPORT_LOGID() {
+        return EXPORT_LOGID;
+    }
+
+    public static String getLOG_ID() {
+        return LOG_ID;
+    }
+
+    public static int getIO_API() {
+        return IO_API;
+    }
     
     /**
      * Import configs dir path.
      */
-    public static String IMPORT_DIR;
+    private String IMPORT_DIR;
     
     /**
      * Export configs dir path.
      */
-    public static String EXPORT_DIR;
+    private String EXPORT_DIR;
     
     /**
      * Log id for this class.
      */
-    public static String LOG_ID = "ВВІД/ВИВІД";
+    private static final String LOG_ID = "ВВІД/ВИВІД";
     
     /**
      * Numeric id of current library API.
      */
-    public static final int IO_API = 2;
+    private static final int IO_API = 2;
     
     /**
      * System wrapper object.
      */
-    public static Utils.SystemWrapper serverWrapper;
+    private SystemWrapper serverWrapper;
     
     /**
-     * Current import quene object.
+     * Current import queue object.
      */
-    public static Import.Quene quene;
+    private Queue queue;
     
     /**
      * Current export dispathcher object.
      */
-    public static Export.Dispatcher dispathcer;
+    private Dispatcher dispathcer;
+    
+    private static IOControl instance;
+    
+    private IOControl() {}
+    
+    public static IOControl getInstance() {
+        if (instance == null) {
+            instance = new IOControl();
+        }
+        return instance;
+    }
     
     /**
      * Load wrapper to the IO subsystem.
      * @param givenWrapper wrapper to load.
      */
-    public static void initWrapper(Utils.SystemWrapper givenWrapper) {
-        IOControl.serverWrapper = givenWrapper;
+    public void initWrapper(SystemWrapper givenWrapper) {
+        serverWrapper = givenWrapper;
     }
     
     /**
@@ -91,25 +122,25 @@ public final class IOControl {
      * @param importPath path of import config folder;
      * @param exportPath path of export config folder;
      */
-    public static void registerPathes(String importPath, String exportPath) {
+    public void registerPathes(String importPath, String exportPath) {
         IMPORT_DIR = importPath;
         EXPORT_DIR = exportPath;
     }
     
     /**
-     * Register quene 
-     * @param givenQuene quene reference to register;
+     * Register queue 
+     * @param givenQuee queue reference to register;
      */
-    public static void registerImport(Import.Quene givenQuene) {
-        IOControl.quene = givenQuene;
+    public void registerImport(Queue givenQuee) {
+        queue = givenQuee;
     }
     
     /**
      * Register dispatcher.
      * @param givenDispatcher dispather reference to register 
      */
-    public static void registerExport(Export.Dispatcher givenDispatcher) {
-        IOControl.dispathcer = givenDispatcher;
+    public void registerExport(Dispatcher givenDispatcher) {
+        dispathcer = givenDispatcher;
     }
     
     /**
@@ -117,11 +148,11 @@ public final class IOControl {
      * @param modulePath path to the module folder.
      * @return list with module containers.
      */
-    public static java.util.ArrayList<Utils.ModuleContainer> loadModules(String modulePath) {
-        ArrayList<Utils.ModuleContainer> classes = new ArrayList();
+    public List<ModuleContainer> loadModules(String modulePath) {
+        List<ModuleContainer> classes = new ArrayList();
         File[] modulesRaw = new File(modulePath).listFiles();
         for (File moduleFile : modulesRaw) {
-            IOControl.processModule(moduleFile.getName(), modulePath, classes);
+            processModule(moduleFile.getName(), modulePath, classes);
         }
         return classes;
     }
@@ -132,11 +163,11 @@ public final class IOControl {
      * @param restOfPath full path to module directory;
      * @param classes modules store list;
      */
-    private static void processModule(String fileName, String restOfPath, ArrayList<Utils.ModuleContainer> classes) {
+    private void processModule(String fileName, String restOfPath, List<ModuleContainer> classes) {
         try {
             JarFile jarFile;
-            java.net.URLClassLoader loader;
-            loader = java.net.URLClassLoader.newInstance(new URL[] {new URL("jar:file:" + restOfPath + fileName + "!/")});
+            URLClassLoader loader;
+            loader = URLClassLoader.newInstance(new URL[] {new URL("jar:file:" + restOfPath + fileName + "!/")});
             jarFile = new JarFile(restOfPath + "/" + fileName);
             Enumeration<JarEntry> entries = jarFile.entries();
             while(entries.hasMoreElements()) {
@@ -149,20 +180,20 @@ public final class IOControl {
                 if (className != null) {
                     try {
                         Class loadedClass = loader.loadClass(className);
-                        Utils.ModuleContainer module = tryModule(loadedClass);
+                        ModuleContainer module = tryModule(loadedClass);
                         if (module != null) {
-                            IOControl.serverWrapper.log(LOG_ID, 2, "завантажено модуль '" + module.moduleClass.getName() + "'");
+                            serverWrapper.log(LOG_ID, 2, "завантажено модуль '" + module.getModuleClass().getName() + "'");
                             classes.add(module);
                         }
                     } catch (ClassNotFoundException ex) {
-                        IOControl.serverWrapper.log(LOG_ID, 1, "неможливо завантажити клас " + className + "!");
+                        serverWrapper.log(LOG_ID, 1, "неможливо завантажити клас " + className + "!");
                     }
                 }
             }
         } catch (java.net.MalformedURLException ex) {
-            IOControl.serverWrapper.log(LOG_ID, 1, "некоректний URL для файлу " + fileName + "!");
+            serverWrapper.log(LOG_ID, 1, "некоректний URL для файлу " + fileName + "!");
         } catch (IOException ex) {
-            IOControl.serverWrapper.log(LOG_ID, 1, "неможливо прочитати файл " + fileName + "!");
+            serverWrapper.log(LOG_ID, 1, "неможливо прочитати файл " + fileName + "!");
         }
     }
     
@@ -171,18 +202,38 @@ public final class IOControl {
      * @param givenClass class to try;
      * @return builded <code>ModuleContainer</code> instance.
      */
-    private static Utils.ModuleContainer tryModule(Class givenClass) {
+    private ModuleContainer tryModule(Class givenClass) {
         try {
             RibbonIOModule moduleNote = (RibbonIOModule) givenClass.getAnnotation(RibbonIOModule.class);
             if (moduleNote != null && (moduleNote.api_version() <= IOControl.IO_API)) {
-                IOControl.serverWrapper.registerPropertyName(moduleNote.property());
-                return new Utils.ModuleContainer(moduleNote.type(), moduleNote.property(), givenClass);
+                serverWrapper.registerPropertyName(moduleNote.property());
+                return new ModuleContainer(moduleNote.type(), moduleNote.property(), givenClass);
             } else {
                 return null;
             }
         } catch (Exception ex) {
-            IOControl.serverWrapper.log(LOG_ID, 1, "помилка опрацювання класу " + givenClass.getName());
+            serverWrapper.log(LOG_ID, 1, "помилка опрацювання класу " + givenClass.getName());
             return null;
         }
+    }
+
+    public SystemWrapper getServerWrapper() {
+        return serverWrapper;
+    }
+
+    public Queue getQueue() {
+        return queue;
+    }
+
+    public Dispatcher getDispathcer() {
+        return dispathcer;
+    }
+
+    public String getIMPORT_DIR() {
+        return IMPORT_DIR;
+    }
+
+    public String getEXPORT_DIR() {
+        return EXPORT_DIR;
     }
 }

@@ -17,9 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Export;
+package tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter;
 
-import Utils.IOControl;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Properties;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
  * Export schema class.
@@ -40,7 +44,7 @@ public class Schema {
     /**
      * Exporter class link.
      */
-    private Class<Exporter> exporterModule;
+    private final Class<Exporter> exporterModule;
     
     /**
      * Export formater.
@@ -50,7 +54,7 @@ public class Schema {
     /**
      * Current export config.
      */
-    public java.util.Properties currConfig;
+    public final Properties currConfig;
     
     /**
      * Emergency action enumetation.
@@ -89,19 +93,19 @@ public class Schema {
         name = currConfig.getProperty("export_name");
         if (currConfig.containsKey("export_template")) {
             try {
-                currFormater = new Formater(currConfig, new String(java.nio.file.Files.readAllBytes(new java.io.File(IOControl.EXPORT_DIR + "/" + currConfig.getProperty("export_template")).toPath())));
+                currFormater = new Formater(currConfig, new String(Files.readAllBytes(new File(IOControl.getInstance().getEXPORT_DIR() + "/" + currConfig.getProperty("export_template")).toPath())));
             } catch (java.io.IOException ex) {
-                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + name, 1, "помилка завантаження шаблону " + IOControl.EXPORT_DIR + "/" + currConfig.getProperty("export_template"));
+                IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID() + ":" + name, 1, "помилка завантаження шаблону " + IOControl.getInstance().getEXPORT_DIR() + "/" + currConfig.getProperty("export_template"));
             }
         }
         if (currConfig.containsKey("opt_em_action")) {
             try {
                 currAction = EM_ACTION.valueOf(currConfig.getProperty("opt_em_action"));
             } catch (IllegalArgumentException ex) {
-                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + name, 1, "тип аварійної дії '" + currConfig.getProperty("opt_em_action") + "' не підтримується системою.");
+                IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID() + ":" + name, 1, "тип аварійної дії '" + currConfig.getProperty("opt_em_action") + "' не підтримується системою.");
             }
         }
-        IOControl.serverWrapper.log(IOControl.EXPORT_LOGID, 3, "завантажено схему експорту '" + this.name + "'");
+        IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 3, "завантажено схему експорту '" + this.name + "'");
     }
     
     /**
@@ -119,15 +123,15 @@ public class Schema {
      * @param givenDir called dir;
      * @return new export task;
      */
-    public Exporter getNewExportTask(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, ReleaseSwitch givenSwitch, String givenDir) {
+    public Exporter getNewExportTask(Message givenMessage, ReleaseSwitch givenSwitch, String givenDir) {
         Exporter newExport = null;
         try {
-            newExport = (Exporter) this.exporterModule.getConstructor(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message.class, Schema.class, ReleaseSwitch.class, String.class).newInstance(givenMessage, this, givenSwitch, givenDir);
+            newExport = (Exporter) this.exporterModule.getConstructor(Message.class, Schema.class, ReleaseSwitch.class, String.class).newInstance(givenMessage, this, givenSwitch, givenDir);
         } catch (java.lang.reflect.InvocationTargetException ex) {
             ex.getTargetException().printStackTrace();
         } catch (Exception ex) {
-            IOControl.serverWrapper.log(IOControl.EXPORT_LOGID, 1, "неможливо опрацювати класс " + this.exporterModule.getName());
-            IOControl.serverWrapper.enableDirtyState(type, name, this.currConfig.getProperty("export_print"));
+            IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID(), 1, "неможливо опрацювати класс " + this.exporterModule.getName());
+            IOControl.getInstance().getServerWrapper().enableDirtyState(type, name, this.currConfig.getProperty("export_print"));
             ex.printStackTrace();
         }
         return newExport;

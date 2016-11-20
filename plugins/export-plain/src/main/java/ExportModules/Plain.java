@@ -19,14 +19,14 @@
 
 package ExportModules;
 
-import Utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
  * Plain export class.
  * @author Stanislav Nepochatov <spoilt.exile@gmail.com>
  */
-@Utils.RibbonIOModule(type="PLAIN", property="EXPORT_PLAIN", api_version=1)
-public class Plain extends Export.Exporter {
+@tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.RibbonIOModule(type="PLAIN", property="EXPORT_PLAIN", api_version=1)
+public class Plain extends tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Exporter {
     
     /**
      * Constructor redirect.
@@ -35,7 +35,7 @@ public class Plain extends Export.Exporter {
      * @param givenSwitch message index updater switch;
      * @param givenDir dir which message came from;
      */
-    public Plain(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, Export.Schema givenSchema, Export.ReleaseSwitch givenSwitch, String givenDir) {
+    public Plain(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Schema givenSchema, tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.ReleaseSwitch givenSwitch, String givenDir) {
         super(givenMessage, givenSchema, givenSwitch, givenDir);
     }
 

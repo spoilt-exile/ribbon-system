@@ -23,14 +23,14 @@ import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
 import javax.activation.*;
-import Utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
  * Mail message export class.
  * @author Stanislav Nepochatov <spoilt.exile@gmail.com>
  */
-@Utils.RibbonIOModule(type="MAIL", property="EXPORT_MAIL", api_version=2)
-public class Mail extends Export.Exporter {
+@tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.RibbonIOModule(type="MAIL", property="EXPORT_MAIL", api_version=2)
+public class Mail extends tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Exporter {
     
     /**
      * SMTP session object.
@@ -44,7 +44,7 @@ public class Mail extends Export.Exporter {
      * @param givenSwitch message index updater switch;
      * @param givenDir dir which message came from;
      */
-    public Mail(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, Export.Schema givenSchema, Export.ReleaseSwitch givenSwitch, String givenDir) {
+    public Mail(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Schema givenSchema, tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.ReleaseSwitch givenSwitch, String givenDir) {
         super(givenMessage, givenSchema, givenSwitch, givenDir);
     }
 
@@ -100,7 +100,7 @@ public class Mail extends Export.Exporter {
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
         if (this.currSchema.currConfig.getProperty("mail_subject") != null) {
             if ("1".equals(this.currSchema.currConfig.getProperty("mail_subject_allow_template"))) {
-                Export.Formater headerFormater = new Export.Formater(this.currSchema.currConfig, this.currSchema.currConfig.getProperty("mail_subject"));
+                tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Formater headerFormater = new tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter.Formater(this.currSchema.currConfig, this.currSchema.currConfig.getProperty("mail_subject"));
                 message.setSubject(headerFormater.format(exportedMessage, calledDir), exportedCharset);
             } else {
                 message.setSubject(this.currSchema.currConfig.getProperty("mail_subject"), exportedCharset);
@@ -120,11 +120,11 @@ public class Mail extends Export.Exporter {
     private String[] readRcpList(String name) {
         String[] returned = null;
         try {
-            returned = new String(java.nio.file.Files.readAllBytes(new java.io.File(IOControl.EXPORT_DIR + "/" + name).toPath())).split("\n");
+            returned = new String(java.nio.file.Files.readAllBytes(new java.io.File(IOControl.getInstance().getEXPORT_DIR() + "/" + name).toPath())).split("\n");
         } catch (java.io.IOException ex) {
-            IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 1, 
+            IOControl.getInstance().getServerWrapper().log(IOControl.getInstance().getEXPORT_LOGID() + ":" + this.currSchema.name, 1, 
             "неможливо прочитати список розсилки - експорт буде проведено до адреси у параметрі mail_to\n"
-            + "Шлях до файлу списку розсилки:" + IOControl.EXPORT_DIR + "/" + name);
+            + "Шлях до файлу списку розсилки:" + IOControl.getInstance().getEXPORT_DIR() + "/" + name);
         }
         return returned;
     }

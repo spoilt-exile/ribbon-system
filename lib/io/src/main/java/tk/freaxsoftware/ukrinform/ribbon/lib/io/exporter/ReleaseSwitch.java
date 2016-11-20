@@ -17,9 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Export;
+package tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter;
 
-import Utils.IOControl;
+import java.util.ArrayList;
+import java.util.List;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
  * ReleaseSwitch is created for prevent massive concurent 
@@ -35,25 +37,25 @@ public class ReleaseSwitch {
      * @param givenIndex index of exported message;
      */
     public ReleaseSwitch(String givenIndex) {
-        INDEX = givenIndex;
+        index = givenIndex;
     }
     
     /**
      * Index of exported message.
      */
-    private String INDEX;
+    private final String index;
     
     /**
      * Array with schemas names.
      */
-    private java.util.ArrayList<String> SCHEMAS = new java.util.ArrayList<>();
+    private List<String> schemeList = new ArrayList<>();
     
     /**
      * Add schemas into switch.
      * @param givenList list to add;
      */
-    public void addSchemas(java.util.ArrayList givenList) {
-        this.SCHEMAS.addAll(givenList);
+    public void addSchemas(List givenList) {
+        this.schemeList.addAll(givenList);
     }
     
     /**
@@ -62,8 +64,8 @@ public class ReleaseSwitch {
      * @param givenName name to mark.
      */
     public void markSchema(String givenName) {
-        SCHEMAS.remove(givenName);
-        if (SCHEMAS.isEmpty()) {
+        schemeList.remove(givenName);
+        if (schemeList.isEmpty()) {
             this.markSwitch();
         }
     }
@@ -72,6 +74,6 @@ public class ReleaseSwitch {
      * Call to index update method after all schemas export.
      */
     private void markSwitch() {
-        IOControl.serverWrapper.updateIndex(INDEX);
+        IOControl.getInstance().getServerWrapper().updateIndex(index);
     }
 }

@@ -19,14 +19,14 @@
 
 package ImportModules;
 
-import Utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
  * Plain import class.
  * @author Stanislav Nepochatov <spoilt.exile@gmail.com>
  */
-@Utils.RibbonIOModule(type="PLAIN", property="IMPORT_PLAIN", api_version=1)
-public class Plain extends Import.Importer {
+@tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.RibbonIOModule(type="PLAIN", property="IMPORT_PLAIN", api_version=1)
+public class Plain extends tk.freaxsoftware.ukrinform.ribbon.lib.io.importer.Importer {
     
     private java.util.ArrayList<String> banned = new java.util.ArrayList();
     
@@ -38,7 +38,7 @@ public class Plain extends Import.Importer {
     protected void resetState() {
         this.banned = new java.util.ArrayList<>();
         this.dirtyStatus = false;
-        IOControl.serverWrapper.disableDirtyState("PLAIN", importerName, importerPrint);
+        IOControl.getInstance().getServerWrapper().disableDirtyState("PLAIN", importerName, importerPrint);
     }
 
     @Override
@@ -168,9 +168,9 @@ public class Plain extends Import.Importer {
         java.io.File[] files = new java.io.File(currConfig.getProperty("plain_path")).listFiles(new MaskFilter());
         //Check if files equals to null. If true then module switch on DIRTY state on the server.
         if (files == null) {
-            IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, "невожливо отримати доступ до теки імпорту: " + currConfig.getProperty("plain_path"));
+            IOControl.getInstance().getServerWrapper().log(IOControl.getIMPORT_LOGID() + ":" + importerName, 1, "невожливо отримати доступ до теки імпорту: " + currConfig.getProperty("plain_path"));
             this.dirtyStatus = true;
-            IOControl.serverWrapper.enableDirtyState("PLAIN", importerName, importerPrint);
+            IOControl.getInstance().getServerWrapper().enableDirtyState("PLAIN", importerName, importerPrint);
             //Exit function to prevent NullPointerException.
             return;
         }
@@ -194,22 +194,22 @@ public class Plain extends Import.Importer {
                 if (this.currConfig.containsKey("plain_copyright_override")) {
                     plainMessage.getProperties().add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty("COPYRIGHT", "root", currConfig.getProperty("plain_copyright_override")));
                 }
-                IOControl.serverWrapper.addMessage(this.importerName, "PLAIN", plainMessage);
+                IOControl.getInstance().getServerWrapper().addMessage(this.importerName, "PLAIN", plainMessage);
                 //Log this event if such behavior specified by config.
                 if ("1".equals(currConfig.getProperty("opt_log"))) {
-                    IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 3, "прозведено імпорт файлу " + currFile.getAbsolutePath());
+                    IOControl.getInstance().getServerWrapper().log(IOControl.getIMPORT_LOGID() + ":" + importerName, 3, "прозведено імпорт файлу " + currFile.getAbsolutePath());
                 }
             } catch (java.io.IOException ex) {
                 //If file deletion failed.
                 if (stage == 2) {
-                    IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, "невожливо видалити файл " + currFile.getAbsolutePath() + ". Файл долучено до чорного списку!");
+                    IOControl.getInstance().getServerWrapper().log(IOControl.getIMPORT_LOGID() + ":" + importerName, 1, "невожливо видалити файл " + currFile.getAbsolutePath() + ". Файл долучено до чорного списку!");
                     //Add file path to banned list and switch dirty state.
                     this.banned.add(currFile.getAbsolutePath());
                     this.dirtyStatus = true;
-                    IOControl.serverWrapper.enableDirtyState("PLAIN", importerName, importerPrint);
+                    IOControl.getInstance().getServerWrapper().enableDirtyState("PLAIN", importerName, importerPrint);
                 //Or if file cann't be open/read.
                 } else {
-                    IOControl.serverWrapper.log(IOControl.IMPORT_LOGID + ":" + importerName, 1, "невожливо открити файл " + currFile.getAbsolutePath());
+                    IOControl.getInstance().getServerWrapper().log(IOControl.getIMPORT_LOGID() + ":" + importerName, 1, "невожливо открити файл " + currFile.getAbsolutePath());
                 }
             }
         }

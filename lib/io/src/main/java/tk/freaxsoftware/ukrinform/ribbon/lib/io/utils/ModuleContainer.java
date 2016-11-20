@@ -17,7 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Utils;
+package tk.freaxsoftware.ukrinform.ribbon.lib.io.utils;
+
+import java.util.Objects;
 
 /**
  * Module class container.
@@ -28,17 +30,17 @@ public class ModuleContainer<E> {
     /**
      * Type of import/export module.
      */
-    public String moduleType;
+    private String moduleType;
     
     /**
      * Property of import/export module.
      */
-    public String moduleProperty;
+    private String moduleProperty;
     
     /**
      * Class of import/export module.
      */
-    public Class<E> moduleClass;
+    private Class<E> moduleClass;
     
     /**
      * Default constructor.
@@ -60,4 +62,63 @@ public class ModuleContainer<E> {
         moduleProperty = givenProp;
         moduleClass = givenModule;
     }
+
+    public String getModuleType() {
+        return moduleType;
+    }
+
+    public void setModuleType(String moduleType) {
+        this.moduleType = moduleType;
+    }
+
+    public String getModuleProperty() {
+        return moduleProperty;
+    }
+
+    public void setModuleProperty(String moduleProperty) {
+        this.moduleProperty = moduleProperty;
+    }
+
+    public Class<E> getModuleClass() {
+        return moduleClass;
+    }
+
+    public void setModuleClass(Class<E> moduleClass) {
+        this.moduleClass = moduleClass;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 53 * hash + Objects.hashCode(this.moduleType);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ModuleContainer<?> other = (ModuleContainer<?>) obj;
+        if (!Objects.equals(this.moduleType, other.moduleType)) {
+            return false;
+        }
+        if (!Objects.equals(this.moduleProperty, other.moduleProperty)) {
+            return false;
+        }
+        if (!Objects.equals(this.moduleClass, other.moduleClass)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "ModuleContainer{" + "moduleType=" + moduleType + ", moduleProperty=" + moduleProperty + ", moduleClass=" + moduleClass + '}';
+    }
+    
+    
 }

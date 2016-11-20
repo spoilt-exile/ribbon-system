@@ -17,9 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Export;
+package tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter;
 
-import Utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty;
 
 /**
  * Export single operation thread class.
@@ -30,17 +32,17 @@ public abstract class Exporter extends Thread {
     /**
      * Current export scheme.
      */
-    protected Schema currSchema;
+    protected final Schema currSchema;
     
     /**
      * Release switch for index updating.
      */
-    protected ReleaseSwitch currSwitch;
+    protected final ReleaseSwitch currSwitch;
     
     /**
      * Dir which call this export task.
      */
-    protected String calledDir;
+    protected final String calledDir;
     
     /**
      * Exported message itself. You should use 
@@ -52,7 +54,7 @@ public abstract class Exporter extends Thread {
     /**
      * Current exporting message.
      */
-    protected tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message exportedMessage;
+    protected final Message exportedMessage;
     
     /**
      * Charset for export.
@@ -66,7 +68,7 @@ public abstract class Exporter extends Thread {
      * @param givenSwitch message index updater switch;
      * @param givenDir dir which message came from;
      */
-    public Exporter(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, Schema givenSchema, ReleaseSwitch givenSwitch, String givenDir) {
+    public Exporter(Message givenMessage, Schema givenSchema, ReleaseSwitch givenSwitch, String givenDir) {
         currSchema = givenSchema;
         currSwitch = givenSwitch;
         exportedMessage = givenMessage;
@@ -86,21 +88,20 @@ public abstract class Exporter extends Thread {
         try {
             doExport();
             if ("1".equals(this.currSchema.currConfig.getProperty("opt_log"))) {
-                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 3, "прозведено експорт повідомлення " + this.exportedMessage.getIndex());
+                IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID() + ":" + this.currSchema.name, 3, "прозведено експорт повідомлення " + this.exportedMessage.getIndex());
             }
-            exportedMessage.getProperties().add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty("EXPORT_" + this.currSchema.currConfig.getProperty("export_type"), "root", this.currSchema.currConfig.getProperty("export_print")));
+            exportedMessage.getProperties().add(new MessageProperty("EXPORT_" + this.currSchema.currConfig.getProperty("export_type"), "root", this.currSchema.currConfig.getProperty("export_print")));
         } catch (Exception ex) {
-            //IOControl.serverWrapper.enableDirtyState(this.currSchema.type, this.currSchema.name, this.currSchema.currConfig.getProperty("export_print"));
-            IOControl.serverWrapper.postException("Помилка експорту: схема " + this.currSchema.name
+            IOControl.getInstance().getServerWrapper().postException("Помилка експорту: схема " + this.currSchema.name
                     + " тип " + this.currSchema.type
                     + "\nПовідомлення " + this.exportedMessage.getHeader() + " за індексом " + this.exportedMessage.getIndex(), ex);
             switch (this.currSchema.currAction) {
                 case PLACE_ERRQ_DIRTY:
-                    IOControl.serverWrapper.enableDirtyState(this.currSchema.type, this.currSchema.name, this.currSchema.currConfig.getProperty("export_print"));
-                    IOControl.dispathcer.addToQuene(this);
+                    IOControl.getInstance().getServerWrapper().enableDirtyState(this.currSchema.type, this.currSchema.name, this.currSchema.currConfig.getProperty("export_print"));
+                    IOControl.getInstance().getDispathcer().addToQuene(this);
                     break;
                 case DROP_WARN: 
-                    IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 1, "експорт повідомлення '" + this.exportedMessage.getHeader() + "' завершився помилкою.");
+                    IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID() + ":" + this.currSchema.name, 1, "експорт повідомлення '" + this.exportedMessage.getHeader() + "' завершився помилкою.");
                     break;
                 case DROP_SILENT:   //Do nothing
                     break;
@@ -122,11 +123,11 @@ public abstract class Exporter extends Thread {
         try {
             this.doExport();
             if ("1".equals(this.currSchema.currConfig.getProperty("opt_log"))) {
-                IOControl.serverWrapper.log(IOControl.EXPORT_LOGID + ":" + this.currSchema.name, 3, "прозведено експорт повідомлення " + this.exportedMessage.getIndex());
+                IOControl.getInstance().getServerWrapper().log(IOControl.getEXPORT_LOGID() + ":" + this.currSchema.name, 3, "прозведено експорт повідомлення " + this.exportedMessage.getIndex());
             }
-            exportedMessage.getProperties().add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty("EXPORT_" + this.currSchema.currConfig.getProperty("export_type"), "root", this.currSchema.currConfig.getProperty("export_print")));
-            IOControl.serverWrapper.updateIndex(this.exportedMessage.getIndex());
-            IOControl.serverWrapper.disableDirtyState(this.currSchema.type, this.currSchema.name, this.currSchema.currConfig.getProperty("export_print"));
+            exportedMessage.getProperties().add(new MessageProperty("EXPORT_" + this.currSchema.currConfig.getProperty("export_type"), "root", this.currSchema.currConfig.getProperty("export_print")));
+            IOControl.getInstance().getServerWrapper().updateIndex(this.exportedMessage.getIndex());
+            IOControl.getInstance().getServerWrapper().disableDirtyState(this.currSchema.type, this.currSchema.name, this.currSchema.currConfig.getProperty("export_print"));
             return true;
         } catch (Exception ex) {
             return false;

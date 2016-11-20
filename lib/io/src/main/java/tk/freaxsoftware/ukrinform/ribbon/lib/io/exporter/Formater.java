@@ -17,11 +17,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package Export;
+package tk.freaxsoftware.ukrinform.ribbon.lib.io.exporter;
+
+import java.util.ListIterator;
+import java.util.Properties;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty;
 
 /**
  * Message formater class for export.
  * @author Stanislav Nepochatov <spoilt.exile@gmail.com>
+ * TODO: replace it with Freemarker templating.
  */
 public class Formater {
     
@@ -30,12 +36,12 @@ public class Formater {
     /**
      * Current template string.
      */
-    private String currTemplate;
+    private final String currTemplate;
     
     /**
      * Current formatting message.
      */
-    private tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message currMessage;
+    private Message currMessage;
     
     /**
      * Current called directory.
@@ -43,17 +49,20 @@ public class Formater {
     private String currCalledDir;
     
     /**
-     * Current template char array;
+     * Current template char array.
      */
     private char[] templateChar;
     
-    private java.util.Properties schemaProp;
+    /**
+     * Current export schema properties.
+     */
+    private final Properties schemaProp;
     
     /**
      * Default constructor.
      * @param givenTemplate template for formating;
      */
-    public Formater(java.util.Properties givenProp, String givenTemplate) {
+    public Formater(Properties givenProp, String givenTemplate) {
         this.currTemplate = givenTemplate;
         this.schemaProp = givenProp;
     }
@@ -64,7 +73,7 @@ public class Formater {
      * @param calledDir message dir;
      * @return formated string.
      */
-    public String format(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage, String calledDir) {
+    public String format(Message givenMessage, String calledDir) {
         this.currCalledDir = calledDir;
         this.currMessage = givenMessage;
         if (this.templateChar == null) {
@@ -251,9 +260,9 @@ public class Formater {
         new FormatOperation("AUTHOR") {
             @Override
             public String process(Formater givenFormater) {
-                java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty> propIter = givenFormater.currMessage.getProperties().listIterator();
+                ListIterator<MessageProperty> propIter = givenFormater.currMessage.getProperties().listIterator();
                 while (propIter.hasNext()) {
-                    tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty currProp = propIter.next();
+                    MessageProperty currProp = propIter.next();
                     if (currProp.getType().equals("COPYRIGHT")) {
                         return currProp.getDescription();
                     }
