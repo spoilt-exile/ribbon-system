@@ -1,0 +1,2 @@
+RIBBON_USER,{tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User},{tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.UserHandler},user.index
+RIBBON_USER_GROUP,{tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup},{tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.UserGroupHandler},group.index

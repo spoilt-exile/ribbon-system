@@ -36,5 +36,10 @@
             <artifactId>io</artifactId>
             <version>a3</version>
         </dependency>
+        <dependency>
+            <groupId>tk.freaxsoftware.extras</groupId>
+            <artifactId>faststorage</artifactId>
+            <version>3.0</version>
+        </dependency>
     </dependencies>
 </project>

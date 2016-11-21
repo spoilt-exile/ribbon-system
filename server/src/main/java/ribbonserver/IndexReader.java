@@ -23,6 +23,7 @@ package ribbonserver;
  * Read, parse and store CSV Ribbon configurations and base index class
  * @author Stanislav Nepochatov
  * @since RibbonServer a1
+ * @deprecated 
  */
 public abstract class IndexReader {
     
@@ -99,110 +100,6 @@ public abstract class IndexReader {
             }
         }
         return Dirs;
-    }
-    
-    /**
-     * Read users in users index file
-     * @return arrayList of users entries
-     * @since RibbonServer a1
-     */
-    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> readUsers() {
-        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> returnedUsers = new java.util.ArrayList<>();
-        java.io.BufferedReader userIndexReader = null;
-        try {
-            userIndexReader = new java.io.BufferedReader(new java.io.FileReader(RibbonServer.BASE_PATH + "/" + RibbonServer.USERS_INDEX_PATH));
-            while (userIndexReader.ready()) {
-                returnedUsers.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User(userIndexReader.readLine()));
-            }
-        } catch (java.io.FileNotFoundException ex) {
-            RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу користувачів не знайдено. Створюю новий.");
-            java.io.File usersIndexFile = new java.io.File(RibbonServer.BASE_PATH + "/" + RibbonServer.USERS_INDEX_PATH);
-            java.io.FileWriter usersIndexWriter = null;
-            try {
-                usersIndexFile.createNewFile();
-                usersIndexWriter = new java.io.FileWriter(usersIndexFile);
-                usersIndexWriter.write("{root},{Root administrator, pass: root},[ADM],63a9f0ea7bb98050796b649e85481845,1\n");
-                usersIndexWriter.write("{test},{Test user, pass: test},[test],098f6bcd4621d373cade4e832627b4f6,1\n");
-                returnedUsers.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User("{root},{Root administrator, pass: root},[ADM],63a9f0ea7bb98050796b649e85481845,1"));
-                returnedUsers.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User("{test},{Test user, pass: test},[test],098f6bcd4621d373cade4e832627b4f6,1"));
-            } catch (java.io.IOException exq) {
-                RibbonServer.logAppend(LOG_ID, 0, "неможливо створити новий файл індексу користувачів!");
-                System.exit(5);
-            } finally {
-                if (usersIndexWriter != null) {
-                    try {
-                        usersIndexWriter.close();
-                    } catch (java.io.IOException exq) {
-                        RibbonServer.logAppend(LOG_ID, 0, "неможливо закрити новий файл індексу користувачів!");
-                        System.exit(5);
-                    }
-                }
-            }
-        } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 0, "помилка читання файлу індекса користувачів!");
-            System.exit(4);
-        } finally {
-            try {
-                if (userIndexReader != null) {
-                    userIndexReader.close();
-                }
-            }  catch (java.io.IOException ex) {
-                RibbonServer.logAppend(LOG_ID, 0, "помилка закриття файлу індекса користувачів!");
-                System.exit(4);
-            }
-        }
-        return returnedUsers;
-    }
-    
-    /**
-     * Read groups in groups index file
-     * @return arrayList of groups entries
-     * @since RibbonServer a2
-     */
-    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup> readGroups() {
-        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup> returnedGroups = new java.util.ArrayList<>();
-        java.io.BufferedReader groupIndexReader = null;
-        try {
-            groupIndexReader = new java.io.BufferedReader(new java.io.FileReader(RibbonServer.BASE_PATH + "/" + RibbonServer.GROUPS_INDEX_PATH));
-            while (groupIndexReader.ready()) {
-                returnedGroups.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup(groupIndexReader.readLine()));
-            }
-        } catch (java.io.FileNotFoundException ex) {
-            RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу груп не знайдено. Створюю новий.");
-            java.io.File usersIndexFile = new java.io.File(RibbonServer.BASE_PATH + "/" + RibbonServer.GROUPS_INDEX_PATH);
-            java.io.FileWriter groupIndexWriter = null;
-            try {
-                usersIndexFile.createNewFile();
-                groupIndexWriter = new java.io.FileWriter(usersIndexFile);
-                groupIndexWriter.write("{test},{Test group}\n");
-                returnedGroups.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup("{test},{Test group}"));
-            } catch (java.io.IOException exq) {
-                RibbonServer.logAppend(LOG_ID, 0, "неможливо створити новий файл індексу груп!");
-                System.exit(5);
-            } finally {
-                if (groupIndexWriter != null) {
-                    try {
-                        groupIndexWriter.close();
-                    } catch (java.io.IOException exq) {
-                        RibbonServer.logAppend(LOG_ID, 0, "неможливо закрити новий файл індексу груп!");
-                        System.exit(5);
-                    }
-                }
-            }
-        } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 0, "помилка читання файлу індекса груп!");
-            System.exit(4);
-        } finally {
-            if (groupIndexReader != null) {
-                try {
-                    groupIndexReader.close();
-                } catch (java.io.IOException ex) {
-                    RibbonServer.logAppend(LOG_ID, 0, "помилка закриття файлу індекса груп!");
-                    System.exit(4);
-                }
-            }
-        }
-        return returnedGroups;
     }
     
     /**

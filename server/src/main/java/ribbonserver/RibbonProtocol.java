@@ -314,7 +314,7 @@ public class RibbonProtocol {
             public String exec(String args) {
                 if (CURR_SESSION.USER_NAME != null) {
                     tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User curr = AccessHandler.getEntryByName(CURR_SESSION.USER_NAME);
-                    return "OK:{" + curr.getLogin() + "},{" + curr.getDescription() + "}," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(curr.getGroups());
+                    return "OK:{" + curr.getLogin() + "},{" + curr.getDescription() + "}," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(curr.getGroups().getKeys().toArray(new String[curr.getGroups().getKeys().size()]));
                 } else {
                     return "RIBBON_ERROR:Вхід до системи не виконано!";
                 }

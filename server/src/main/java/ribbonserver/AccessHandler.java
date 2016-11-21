@@ -20,6 +20,12 @@
 package ribbonserver;
 
 import java.util.Arrays;
+import java.util.List;
+import tk.freaxsoftware.extras.faststorage.storage.Handlers;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.UserGroupHandler;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.UserHandler;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup;
 
 /**
  * Access control class and handler
@@ -34,23 +40,28 @@ public final class AccessHandler {
      * User storage list.
      * @since RibbonServer a2
      */
-    private static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> userStore;
+    private static List<User> userStore;
     
     /**
      * Group storage list.
      * @since RibbonServer a2
      */
-    private static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup> groupStore;
+    private static List<UserGroup> groupStore;
+    
+    private static UserHandler userHandler = (UserHandler) Handlers.getHandlerByType(User.TYPE);
+    
+    private static UserGroupHandler groupHandler = (UserGroupHandler) Handlers.getHandlerByType(UserGroup.TYPE);
     
     /**
      * Init this component;
      * @since RibbonServer a2
      */
     public static void init() {
-        AccessHandler.groupStore = IndexReader.readGroups();
-        AccessHandler.groupStore.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup("{ADM},{Службова група адміністраторів системи \"Стрічка\"}"));
+        AccessHandler.groupStore = groupHandler.getAll();
+        AccessHandler.userStore = userHandler.getAll();
+        //AccessHandler.groupStore.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup("{ADM},{Службова група адміністраторів системи \"Стрічка\"}"));
         RibbonServer.logAppend(LOG_ID, 3, "індекс груп опрацьвано (" + groupStore.size() + ")");
-        AccessHandler.userStore = IndexReader.readUsers();
+        //AccessHandler.userStore = IndexReader.readUsers();
         RibbonServer.logAppend(LOG_ID, 3, "індекс користувачів опрацьвано (" + userStore.size() + ")");
     }
     
@@ -77,7 +88,7 @@ public final class AccessHandler {
                 break;
             }
         }
-        String[] keyArray = Arrays.copyOf(findedUser.getGroups(),findedUser.getGroups().length + 1);
+        String[] keyArray = Arrays.copyOf(findedUser.getGroups().getKeys().toArray(new String[findedUser.getGroups().getKeys().size()]), findedUser.getGroups().getKeys().size() + 1);
         keyArray[keyArray.length - 1] = findedUser.getLogin();
         Boolean findedAnswer = false;
         tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry fallbackPermission = null;
@@ -159,7 +170,7 @@ public final class AccessHandler {
         if (findedUser == null) {
             return false;
         }
-        for (String groupItem : findedUser.getGroups()) {
+        for (String groupItem : findedUser.getGroups().getKeys()) {
             if (groupItem.equals("ADM")) {
                 return true;
             }

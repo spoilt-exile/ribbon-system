@@ -19,6 +19,8 @@
 
 package ribbonserver;
 
+import tk.freaxsoftware.extras.faststorage.exception.EntityProcessingException;
+import tk.freaxsoftware.extras.faststorage.ignition.FastStorageIgnition;
 import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
@@ -413,6 +415,13 @@ public class RibbonServer {
             IOControl.getInstance().registerExport(ExportDispatcher);
         }
         logAppend(LOG_ID, 3, "початок налаштування контролю доступу");
+        try {
+            FastStorageIgnition.igniteOverrided(RibbonServer.class.getClassLoader().getResourceAsStream("entities.ign"), BASE_PATH + "/");
+        } catch (EntityProcessingException ex) {
+            logAppend(LOG_ID, 0, "Unable to ignite entities storage!");
+            ex.printStackTrace();
+            System.exit(-1);
+        }
         AccessHandler.init();
         logAppend(LOG_ID, 3, "початок налаштування напрявків");
         Directories.init();
