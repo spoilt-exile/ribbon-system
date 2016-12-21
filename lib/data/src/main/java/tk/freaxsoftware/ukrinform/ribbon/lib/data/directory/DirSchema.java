@@ -19,8 +19,15 @@
 
 package tk.freaxsoftware.ukrinform.ribbon.lib.data.directory;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVAble;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVDefinition;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVFields;
+import tk.freaxsoftware.extras.faststorage.reading.EntityReader;
+import tk.freaxsoftware.extras.faststorage.writing.EntityWriter;
 
 /**
  * Directory schema object.
@@ -29,7 +36,16 @@ import java.util.Objects;
  * tree and making dirEntry object.</p>
  * @author Stanislav Nepochatov
  */
-public class DirSchema extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder {
+public class DirSchema implements ECSVAble<String> {
+    
+    public final static String TYPE = "RIBBON_DIRECTORY";
+    
+    public final static ECSVDefinition DEFINITION = ECSVDefinition.createNew()
+            .addKey(String.class)
+            .addPrimitive(ECSVFields.PR_STRING)
+            .addArray(null)
+            .addMap(null, null)
+            .addArray(null);
     
     /**
      * Full directory path
@@ -45,19 +61,19 @@ public class DirSchema extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.Cs
      * Directory's supported languages
      * @since RibbonServer a2
      */
-    private String[] languages;
+    private List<String> languages;
 
     /**
      * Access list for directory
      * @since RibbonServer a2
      */
-    private String[] rawAccessEntries;
+    private Map<String, String> rawAccessEntries;
 
     /**
      * Directory's exports list
      * @since RibbonServer a2
      */
-    private String[] exportList;
+    private List<String> exportList;
     
     /**
      * Default constructor.
@@ -65,24 +81,6 @@ public class DirSchema extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.Cs
      * <p>Using for defining csv format options.</p>
      */
     public DirSchema() {
-        this.baseCount = 2;
-        this.groupCount = 3;
-        this.currentFormat = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder.csvFormatType.ComplexCsv;
-    }
-    
-    /**
-     * Default constructor from csv form.
-     * @param givenCsv given csv line
-     * @since RibbonServer a2
-     */
-    public DirSchema(String givenCsv) {
-        this();
-        java.util.ArrayList<String[]> parsedStruct = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.fromCsv(this, givenCsv);
-        fullName = parsedStruct.get(0)[0];
-        description = parsedStruct.get(0)[1];
-        languages = parsedStruct.get(1);
-        rawAccessEntries = parsedStruct.get(2);
-        exportList = parsedStruct.get(3);
     }
 
     /**
@@ -91,12 +89,28 @@ public class DirSchema extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.Cs
      * @param givenComm comment for directory
      */
     public DirSchema(String givenPath, String givenComm) {
-        this();
         fullName = givenPath;
         description = givenComm;
-        languages = new String[] {"ALL"};
+        languages = new ArrayList<>();
+        languages.add("ALL");
         exportList = null;
         rawAccessEntries = null;
+    }
+
+    /**
+     * Full parametric constructor.
+     * @param fullName full name of directory;
+     * @param description description of directory;
+     * @param languages languages of direcotry;
+     * @param rawAccessEntries raw access entries;
+     * @param exportList export list;
+     */
+    public DirSchema(String fullName, String description, List<String> languages, Map<String, String> rawAccessEntries, List<String> exportList) {
+        this.fullName = fullName;
+        this.description = description;
+        this.languages = languages;
+        this.rawAccessEntries = rawAccessEntries;
+        this.exportList = exportList;
     }
 
     /**
@@ -130,42 +144,42 @@ public class DirSchema extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.Cs
     /**
      * @return the languages
      */
-    public String[] getLanguages() {
+    public List<String> getLanguages() {
         return languages;
     }
 
     /**
      * @param languages the languages to set
      */
-    public void setLanguages(String[] languages) {
+    public void setLanguages(List<String> languages) {
         this.languages = languages;
     }
 
     /**
      * @return the rawAccessEntries
      */
-    public String[] getRawAccessEntries() {
+    public Map<String, String> getRawAccessEntries() {
         return rawAccessEntries;
     }
 
     /**
      * @param rawAccessEntries the rawAccessEntries to set
      */
-    public void setRawAccessEntries(String[] rawAccessEntries) {
+    public void setRawAccessEntries(Map<String, String> rawAccessEntries) {
         this.rawAccessEntries = rawAccessEntries;
     }
 
     /**
      * @return the exportList
      */
-    public String[] getExportList() {
+    public List<String> getExportList() {
         return exportList;
     }
 
     /**
      * @param exportList the exportList to set
      */
-    public void setExportList(String[] exportList) {
+    public void setExportList(List<String> exportList) {
         this.exportList = exportList;
     }
 
@@ -191,13 +205,13 @@ public class DirSchema extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.Cs
         if (!Objects.equals(this.description, other.description)) {
             return false;
         }
-        if (!Arrays.deepEquals(this.languages, other.languages)) {
+        if (!!Objects.equals(this.languages, other.languages)) {
             return false;
         }
-        if (!Arrays.deepEquals(this.rawAccessEntries, other.rawAccessEntries)) {
+        if (!!Objects.equals(this.rawAccessEntries, other.rawAccessEntries)) {
             return false;
         }
-        if (!Arrays.deepEquals(this.exportList, other.exportList)) {
+        if (!!Objects.equals(this.exportList, other.exportList)) {
             return false;
         }
         return true;
@@ -209,8 +223,50 @@ public class DirSchema extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.Cs
     }
 
     @Override
-    public String toCsv() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public String getEntityType() {
+        return TYPE;
+    }
+
+    @Override
+    public String getKey() {
+        return fullName;
+    }
+
+    @Override
+    public void setKey(String key) {
+        //Do nothing
+    }
+
+    @Override
+    public ECSVDefinition getDefinition() {
+        return DEFINITION;
+    }
+
+    @Override
+    public void readFromECSV(EntityReader<String> reader) {
+        fullName = reader.readKey();
+        description = reader.readString();
+        languages = reader.readArray();
+        rawAccessEntries = reader.readMap();
+        exportList = reader.readArray();
+    }
+
+    @Override
+    public void writeToECSV(EntityWriter<String> writer) {
+        writer.writeKey(fullName);
+        writer.writeString(description);
+        writer.writeArray(languages);
+        writer.writeMap(rawAccessEntries);
+        writer.writeArray(exportList);
+    }
+
+    @Override
+    public void update(ECSVAble<String> updatedEntity) {
+        DirSchema otherDir = (DirSchema) updatedEntity;
+        description = otherDir.getDescription();
+        languages = otherDir.getLanguages();
+        rawAccessEntries = otherDir.getRawAccessEntries();
+        exportList = otherDir.getExportList();
     }
     
 }

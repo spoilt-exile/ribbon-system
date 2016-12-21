@@ -20,7 +20,6 @@
 package tk.freaxsoftware.ukrinform.ribbon.lib.data.directory;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -59,14 +58,14 @@ public class DirPermissionEntry extends tk.freaxsoftware.ukrinform.ribbon.lib.da
     
     /**
      * Default constructor
-     * @param rawDescriptor string descriptor of permission to directory
+     * @param key
+     * @param descriptor
      */
-    public DirPermissionEntry(String rawDescriptor) {
+    public DirPermissionEntry(String key, String descriptor) {
         this();
-        List<String[]> parsedStruct = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.fromCsv(this, rawDescriptor);
-        key = parsedStruct.get(0)[0].substring(1);
-        groupPermission = parsedStruct.get(0)[0].charAt(0) == 'G' ? true : false;
-        permissionDescriptor = parsedStruct.get(0)[1].toCharArray();
+        this.key = key;
+        groupPermission = key.charAt(0) == 'G' ? true : false;
+        permissionDescriptor = descriptor.toCharArray();
     }
     
     public String getKey() {

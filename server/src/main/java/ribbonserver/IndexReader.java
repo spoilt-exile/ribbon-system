@@ -42,67 +42,6 @@ public abstract class IndexReader {
     private static final Object SESSION_LOCK = new Object();
     
     /**
-     * Read directories in directory index file
-     * @return arraylist of dir shemas
-     * @see Directories.dirSchema
-     * @since RibbonServer a1
-     */
-    public static java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readDirectories() {
-        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> Dirs = new java.util.ArrayList<>();
-        java.io.BufferedReader dirIndexReader = null;
-        try {
-            dirIndexReader = new java.io.BufferedReader(new java.io.FileReader(RibbonServer.BASE_PATH + "/" + RibbonServer.DIR_INDEX_PATH));
-            while (dirIndexReader.ready()) {
-                Dirs.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema(dirIndexReader.readLine()));
-            }
-        } catch (java.io.FileNotFoundException ex) {
-            RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу напрявків не знайдено. Створюю новий.");
-            java.io.File dirIndexFile = new java.io.File(RibbonServer.BASE_PATH + "/" + RibbonServer.DIR_INDEX_PATH);
-            String[] defaultDirs = new String[] {
-              "СИСТЕМА,{Головний напрямок новин про розробку системи},[ALL],[GALL:100],[]",
-              "СИСТЕМА.Розробка,{Новини про розробку},[UA,RU],[GALL:100],[]",
-              "СИСТЕМА.Тест,{Тестовий напрямок},[UA,RU],[GALL:110],[]",
-              "СИСТЕМА.Загублене,{Напрямок для загублених повідомлень},[ALL],[GALL:100],[]",
-              "СИСТЕМА.Помилки,{Напрямок журналу помилок системи},[ALL],[GALL:000],[]"
-            };
-            java.io.FileWriter dirIndexWriter = null;
-            try {
-                dirIndexFile.createNewFile();
-                dirIndexWriter = new java.io.FileWriter(dirIndexFile);
-                for (String defString: defaultDirs) {
-                    dirIndexWriter.write(defString + "\n");
-                    Dirs.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema(defString));
-                }
-            } catch (java.io.IOException exq) {
-                RibbonServer.logAppend(LOG_ID, 0, "неможливо створити новий файл індексу напрямків!");
-                System.exit(4);
-            } finally {
-                try{
-                    if (dirIndexWriter != null) {
-                        dirIndexWriter.close();
-                    }
-                } catch (java.io.IOException exq) {
-                    RibbonServer.logAppend(LOG_ID, 0, "неможливо закрити файл індексу напрямків!");
-                    System.exit(4);
-                }
-            }
-        } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 0, "помилка читання файлу індекса напрямків!");
-            System.exit(4);
-        } finally {
-            try {
-                if (dirIndexReader != null) {
-                    dirIndexReader.close();
-                }
-            } catch (java.io.IOException ex) {
-                RibbonServer.logAppend(LOG_ID, 0, "помилка закриття файлу індекса напрямків!");
-                System.exit(4);
-            }
-        }
-        return Dirs;
-    }
-    
-    /**
      * Read message indexes in base index file
      * @return arraylist with index entries
      * @since RibbonServer a1

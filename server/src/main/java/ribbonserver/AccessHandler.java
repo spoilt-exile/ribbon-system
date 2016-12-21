@@ -22,6 +22,7 @@ package ribbonserver;
 import java.util.Arrays;
 import java.util.List;
 import tk.freaxsoftware.extras.faststorage.storage.Handlers;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.UserGroupHandler;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.UserHandler;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User;
@@ -91,20 +92,20 @@ public final class AccessHandler {
         String[] keyArray = Arrays.copyOf(findedUser.getGroups().getKeys().toArray(new String[findedUser.getGroups().getKeys().size()]), findedUser.getGroups().getKeys().size() + 1);
         keyArray[keyArray.length - 1] = findedUser.getLogin();
         Boolean findedAnswer = false;
-        tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry fallbackPermission = null;
-        tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry[] dirAccessArray = Directories.getDirAccess(givenDir);
+        DirPermissionEntry fallbackPermission = null;
+        List<DirPermissionEntry> dirAccessArray = Directories.getDirAccess(givenDir);
         if (dirAccessArray != null) {
             for (Integer keyIndex = 0; keyIndex < keyArray.length; keyIndex++) {
-                for (Integer dirIndex = 0; dirIndex < dirAccessArray.length; dirIndex++) {
+                for (Integer dirIndex = 0; dirIndex < dirAccessArray.size(); dirIndex++) {
                     if (keyArray[keyIndex].equals("ADM") && !keyIndex.equals(keyArray.length - 1)) {
                         return true;    //ADM is root-like group, all permission will be ignored
                     }
-                    if (dirAccessArray[dirIndex].getKey().equals("ALL")) {
-                        fallbackPermission = dirAccessArray[dirIndex];
+                    if (dirAccessArray.get(dirIndex).getKey().equals("ALL")) {
+                        fallbackPermission = dirAccessArray.get(dirIndex);
                         continue;
                     }
-                    if (dirAccessArray[dirIndex].getKey().equals(keyArray[keyIndex])) {
-                        findedAnswer = dirAccessArray[dirIndex].checkByMode(givenMode);
+                    if (dirAccessArray.get(dirIndex).getKey().equals(keyArray[keyIndex])) {
+                        findedAnswer = dirAccessArray.get(dirIndex).checkByMode(givenMode);
                         if (findedAnswer == true) {
                             return findedAnswer;
                         }
@@ -121,7 +122,7 @@ public final class AccessHandler {
             }
         }
         if (fallbackPermission == null) {
-            fallbackPermission = new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry("GALL:" + RibbonServer.ACCESS_ALL_MASK);
+            fallbackPermission = new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry("GALL", RibbonServer.ACCESS_ALL_MASK);
         }
         if (findedAnswer == false) {
             findedAnswer = fallbackPermission.checkByMode(givenMode);

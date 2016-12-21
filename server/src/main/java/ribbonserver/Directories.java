@@ -19,11 +19,15 @@
 
 package ribbonserver;
 
-import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Objects;
+import tk.freaxsoftware.extras.faststorage.storage.Handlers;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema;
+import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
  * Directories handle class
@@ -204,8 +208,8 @@ public final class Directories {
      */
     public static void init() {
         rootDir = new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry();
-        java.util.ArrayList<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readedDirs = IndexReader.readDirectories();
-        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readIter = readedDirs.listIterator();
+        List<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readedDirs = Handlers.getHandlerByClass(DirSchema.class).getAll();
+        ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readIter = readedDirs.listIterator();
         while (readIter.hasNext()) {
             tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema currDir = readIter.next();
             RibbonServer.logAppend(LOG_ID, 3, "додано напрямок (" + currDir.getFullName() + ": " + currDir.getDescription() + ")");
@@ -278,7 +282,7 @@ public final class Directories {
      * @return array with permission entries;
      * @since RibbonServer a2
      */
-    public static tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry[] getDirAccess(String givenDir) {
+    public static List<DirPermissionEntry> getDirAccess(String givenDir) {
         try {
             return Directories.rootDir.getAccess("", givenDir);
         } catch (Exception ex) {

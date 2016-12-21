@@ -19,8 +19,10 @@
 
 package tk.freaxsoftware.ukrinform.ribbon.lib.data.directory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -81,12 +83,12 @@ public class DirEntry extends DirSchema {
     /**
      * Arraylist of inner directiries
      */
-    private List<DirEntry> childrenDirs = new java.util.ArrayList<>();
+    private List<DirEntry> childrenDirs = new ArrayList<>();
 
     /**
      * Arraylist of messages indexes
      */
-    private List<String> messageIds = new java.util.ArrayList<>();
+    private List<String> messageIds = new ArrayList<>();
 
     /**
      * Path to dir messages
@@ -97,7 +99,7 @@ public class DirEntry extends DirSchema {
      * Access array of this directory
      * @since RibbonServer a2
      */
-    private DirPermissionEntry[] dirAccessEntries;
+    private List<DirPermissionEntry> dirAccessEntries;
 
     /**
      * Last searched directory
@@ -164,14 +166,14 @@ public class DirEntry extends DirSchema {
     /**
      * @return the dirAccessEntries
      */
-    public DirPermissionEntry[] getDirAccessEntries() {
+    public List<DirPermissionEntry> getDirAccessEntries() {
         return dirAccessEntries;
     }
 
     /**
      * @param dirAccessEntries the dirAccessEntries to set
      */
-    public void setDirAccessEntries(DirPermissionEntry[] dirAccessEntries) {
+    public void setDirAccessEntries(List<DirPermissionEntry> dirAccessEntries) {
         this.dirAccessEntries = dirAccessEntries;
     }
 
@@ -220,7 +222,7 @@ public class DirEntry extends DirSchema {
         if (!Objects.equals(this.dirPath, other.dirPath)) {
             return false;
         }
-        if (!Arrays.deepEquals(this.dirAccessEntries, other.dirAccessEntries)) {
+        if (!Objects.equals(this.dirAccessEntries, other.dirAccessEntries)) {
             return false;
         }
         return true;
@@ -287,19 +289,15 @@ public class DirEntry extends DirSchema {
      * Apply schema to given directory;
      * @param givenSchema schema to apply
      */
-    public void applySchema(tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema givenSchema) {
+    public final void applySchema(DirSchema givenSchema) {
         this.setFullName(givenSchema.getFullName());
         this.setDescription(givenSchema.getDescription());
         this.setLanguages(givenSchema.getLanguages());
         this.setExportList(givenSchema.getExportList());
-        if (givenSchema.getRawAccessEntries() == null) {
-            this.setDirAccessEntries(new DirPermissionEntry[1]);
-        } else if (givenSchema.getRawAccessEntries().length == 1 && givenSchema.getRawAccessEntries()[0].isEmpty()) {
-            this.setDirAccessEntries(new DirPermissionEntry[1]);
-        } else {
-            this.setDirAccessEntries(new DirPermissionEntry[givenSchema.getRawAccessEntries().length]);
-            for (Integer accessIndex = 0; accessIndex < givenSchema.getRawAccessEntries().length; accessIndex++) {
-                this.getDirAccessEntries()[accessIndex] = new DirPermissionEntry(givenSchema.getRawAccessEntries()[accessIndex]);
+        this.setDirAccessEntries(new ArrayList<>());
+        if (givenSchema.getRawAccessEntries() != null && !givenSchema.getRawAccessEntries().isEmpty()) {
+            for (Map.Entry<String, String> entry: givenSchema.getRawAccessEntries().entrySet()) {
+                this.getDirAccessEntries().add(new DirPermissionEntry(entry.getKey(), entry.getValue()));
             }
         }
         String[] chunks = this.getFullName().split("\\.");
@@ -317,7 +315,7 @@ public class DirEntry extends DirSchema {
         for (Integer space = 0; space < inLevel; space++) {
             spaceStr += "   ";
         }
-        String returned = spaceStr + this.getName() + " (" + this.getMessageIds().size() + ") " + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(this.getLanguages()) + " : " + this.getDescription() + "\n";
+        String returned = spaceStr + this.toString() + "\n";
         if (!this.childrenDirs.isEmpty()) {
             java.util.ListIterator<DirEntry> foldedIter = this.getChildrenDirs().listIterator();
             while (foldedIter.hasNext()) {
@@ -383,32 +381,19 @@ public class DirEntry extends DirSchema {
      * @return formated string for net protocol
      */
     public String PROC_GET_DIR() {
-        String returned = "RIBBON_UCTL_LOAD_DIR:" + this.toCsv() + "\n";
-        java.util.ListIterator<DirEntry> foldIter = this.getChildrenDirs().listIterator();
-        while (foldIter.hasNext()) {
-            returned += foldIter.next().PROC_GET_DIR();
-        }
-        return returned;
+        String returned = "RIBBON_UCTL_LOAD_DIR:" + "\n";
+        List<DirEntry> dirList = new ArrayList<>();
+        this.getDirs(dirList);
+        return null;
     }
-
-    /**
-     * Translate directory object into csv index line
-     * @return csv formated string
-     */
-    @Override
-    public String toCsv() {
-        String accessStr;
-        if (this.getDirAccessEntries() != null) {
-            String[] stringedAccess = new String[this.getDirAccessEntries().length];
-            for (Integer strIndex = 0; strIndex < this.getDirAccessEntries().length; strIndex++) {
-                stringedAccess[strIndex] = this.getDirAccessEntries()[strIndex].toCsv();
+    
+    private void getDirs(List<DirEntry> dirList) {
+        dirList.add(this);
+        if (!this.childrenDirs.isEmpty()) {
+            for (DirEntry childDir: this.childrenDirs) {
+                childDir.getDirs(dirList);
             }
-            accessStr = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(stringedAccess);
-        } else {
-            accessStr = "[]";
         }
-        return this.getFullName() + ",{" + this.getDescription() + "}," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(getLanguages()) + "," + 
-                accessStr + "," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(this.getExportList());
     }
 
     /**
@@ -444,14 +429,14 @@ public class DirEntry extends DirSchema {
      * @see dirEntry.dirPermissionEntry
      * @throws Exception 
      */
-    public DirPermissionEntry[] getAccess(String upperLevel, String rest) throws Exception {
+    public List<DirPermissionEntry> getAccess(String upperLevel, String rest) throws Exception {
         Integer joint;
         if ((joint = rest.indexOf(".")) != -1) {
             String indxed_DIR_NAME = rest.substring(0, joint);
             if (this.hasFoldDir(indxed_DIR_NAME) == false) {
                 throw new Exception("Неможливо знайти шлях до напрямку!");
             } else {
-                DirPermissionEntry[] gainedAccess = getLastEntry().getAccess(this.getFullName(), rest.substring(joint + 1));
+                List<DirPermissionEntry> gainedAccess = getLastEntry().getAccess(this.getFullName(), rest.substring(joint + 1));
                 if (gainedAccess == null) {
                     return getLastEntry().getDirAccessEntries();
                 } else {

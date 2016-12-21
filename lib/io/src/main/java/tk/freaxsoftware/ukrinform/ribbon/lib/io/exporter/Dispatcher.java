@@ -153,7 +153,7 @@ public class Dispatcher {
      * @param givenSchemas array with schemas names;
      * @param givenDirName name of directory;
      */
-    public void subscribeDir(String[] givenSchemas, String givenDirName) {
+    public void subscribeDir(List<String> givenSchemas, String givenDirName) {
 	if (givenSchemas == null) {
 	    return;
 	}
