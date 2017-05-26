@@ -22,6 +22,7 @@ package tk.freaxsoftware.ukrinform.ribbon.server;
 import tk.freaxsoftware.extras.faststorage.exception.EntityProcessingException;
 import tk.freaxsoftware.extras.faststorage.ignition.FastStorageIgnition;
 import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
+import tk.freaxsoftware.ukrinform.ribbon.server.web.WebServer;
 
 /**
  * Main Ribbon server class
@@ -269,6 +270,18 @@ public class RibbonServer {
     public static String DEBUG_POST_DIR;
     
     /**
+     * Enable access by HTTP.
+     * @since RibbonServer a3
+     */
+    private static Boolean HTTP_ENABLED;
+    
+    /**
+     * Port for HTTP server.
+     * @since RibbonServer a3
+     */
+    private static Integer HTTP_PORT;
+    
+    /**
      * Name of directory index file.
      * @since RibbonServer a1
      */
@@ -442,6 +455,9 @@ public class RibbonServer {
         logAppend(LOG_ID, 3, "проводиться перевірка конфігурації");
         validateSystemVariables();
         logAppend(LOG_ID, 2, "налаштування мережі");
+        if (HTTP_ENABLED) {
+            WebServer.init(HTTP_PORT);
+        }
         try {
             java.net.ServerSocket RibbonServSocket = new java.net.ServerSocket(NETWORK_PORT);
             logAppend(LOG_ID, 3, "система готова для прийому повідомлень");
@@ -614,6 +630,10 @@ public class RibbonServer {
             System.exit(3);
         }
         
+        //Setting HTTP
+        HTTP_ENABLED = mainConfig.getProperty("http_enabled", "0").equals("1");
+        HTTP_PORT = Integer.valueOf(mainConfig.getProperty("http_port", "0"));
+        
         logAppend(LOG_ID, 3, 
                 "початкова конфігурація завершена.\n" + 
                 "Шлях до бази: " + BASE_PATH + "\n" +
@@ -639,7 +659,14 @@ public class RibbonServer {
                     ):
                     ""
                 )
-                + (RibbonServer.DEBUG_POST_EXCEPTIONS ? "Режим дебагінгу активовано.\nНапрямок реєстрації помилок: " + RibbonServer.DEBUG_POST_DIR : "")
+                + (RibbonServer.DEBUG_POST_EXCEPTIONS ? "Режим дебагінгу активовано.\nНапрямок реєстрації помилок: " + RibbonServer.DEBUG_POST_DIR + "\n" : "")
+                + (RibbonServer.HTTP_ENABLED ?
+                    (
+                    "HTTP сервер увімкнено\n" +
+                    "Порт:" + RibbonServer.HTTP_PORT
+                    ):
+                     ""
+                )
                 );
     }
     
@@ -694,6 +721,11 @@ public class RibbonServer {
         if (DEBUG_POST_EXCEPTIONS && Directories.getDirPath(DEBUG_POST_DIR) == null) {
             logAppend(LOG_ID, 0, "помилка дебагінгу: напрямку " + DEBUG_POST_DIR + " не існує");
             logAppend(LOG_ID, 3, "Перевірьте параметр debug_post_dir у файлі конфігурації");
+            System.exit(3);
+        }
+        
+        if (HTTP_ENABLED && HTTP_PORT < 1024) {
+            logAppend(LOG_ID, 0, "неможливо встановити порт HTTP за значенням меньш ніж 1024");
             System.exit(3);
         }
     }
