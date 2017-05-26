@@ -19,6 +19,8 @@
 
 package tk.freaxsoftware.ukrinform.ribbon.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
@@ -28,7 +30,7 @@ import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
  */
 public class Procedures {
     
-    private static String LOG_ID = "ПРОЦЕДУРИ";
+    private static final Logger LOGGER = LoggerFactory.getLogger(Procedures.class);
     
     /**
      * Post given message into the system information stream
@@ -38,12 +40,12 @@ public class Procedures {
      */
     public static synchronized String PROC_POST_MESSAGE(tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage) {
         if (RibbonServer.CURR_STATE == RibbonServer.SYS_STATES.MAINTAINING || RibbonServer.CURR_STATE == RibbonServer.SYS_STATES.INIT || RibbonServer.CURR_STATE == RibbonServer.SYS_STATES.CLOSING) {
-            RibbonServer.logAppend(LOG_ID, 1, "неможливо випустити повідомлення, система не готова!");
-            return "RIBBON_ERROR:Система не готова!";
+            LOGGER.warn("System not ready for accepting messages.");
+            return "RIBBON_ERROR:System not ready. Try later.";
         } else {
            Integer failedIndex = AccessHandler.checkAccessForAll(givenMessage.getAuthor(), givenMessage.getDirectories(), 1);
             if (failedIndex != null) {
-                return "RIBBON_ERROR:Помилка доступу до напрямку " + givenMessage.getDirectories()[failedIndex];
+                return "RIBBON_ERROR:Access error to the directory " + givenMessage.getDirectories()[failedIndex];
             }
             if (givenMessage.getPreviousIndex().equals("-1")) {
                 givenMessage.setPreviousAuthor(givenMessage.getAuthor());
@@ -59,9 +61,9 @@ public class Procedures {
             IndexReader.appendToBaseIndex(givenMessage.returnEntry().toCsv());
             for (Integer dirIndex = 0; dirIndex < givenMessage.getDirectories().length; dirIndex++) {
                 if (givenMessage.getDirectories()[dirIndex] == null) {
-                    RibbonServer.logAppend(LOG_ID, 1, "неможливо випустити повідомлення" + givenMessage.getHeader() + "на напрямок " + givenMessage.getDirectories()[dirIndex]);
+                    LOGGER.error("unable to post message " + givenMessage.getHeader() + " in directory " + givenMessage.getDirectories()[dirIndex]);
                 } else {
-                    RibbonServer.logAppend(LOG_ID, 3, givenMessage.getDirectories()[dirIndex] + " додано повідомлення: [" + givenMessage.getHeader() + "]");
+                    LOGGER.info(givenMessage.getDirectories()[dirIndex] + " message posted: [" + givenMessage.getHeader() + "]");
                 }
             }
             return "OK:";
@@ -93,9 +95,7 @@ public class Procedures {
                 }
             }
         } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 1, "Неможливо записити файл за шлязом: " + currPath + strIndex);
-        } catch (UnsupportedOperationException ex) {
-            RibbonServer.logAppend(LOG_ID, 1, "Неможливо створити посилання на файл!");
+            LOGGER.warn("Can't write file: " + currPath + strIndex, ex);
         }
     }
     
@@ -132,7 +132,7 @@ public class Procedures {
                 try {
                     java.nio.file.Files.delete(new java.io.File(path).toPath());
                 } catch (java.io.IOException ex) {
-                    RibbonServer.logAppend(LOG_ID, 1, "неможливо видалити повідомлення: " + path);
+                    LOGGER.error("Unable to delete message: " + path, ex);
                 }
             }
         }
@@ -149,11 +149,11 @@ public class Procedures {
             try {
                 java.nio.file.Files.delete(new java.io.File(currPath).toPath());
             } catch (java.io.IOException ex) {
-                RibbonServer.logAppend(LOG_ID, 1, "неможливо видалити повідомлення: " + currPath);
+                LOGGER.error("unable to delete message: " + currPath);
             }
         }
         Messenger.deleteMessageEntryFromIndex(givenEntry);
-        RibbonServer.logAppend(LOG_ID, 3, "повідомлення за індексом " + givenEntry.getIndex() + " вилучено з системи.");
+        LOGGER.error("message with index " + givenEntry.getIndex() + " removed from the system.");
     }
     
     /**

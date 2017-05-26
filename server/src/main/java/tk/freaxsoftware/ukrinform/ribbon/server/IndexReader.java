@@ -19,6 +19,9 @@
 
 package tk.freaxsoftware.ukrinform.ribbon.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Read, parse and store CSV Ribbon configurations and base index class
  * @author Stanislav Nepochatov
@@ -27,7 +30,7 @@ package tk.freaxsoftware.ukrinform.ribbon.server;
  */
 public abstract class IndexReader {
     
-    private static String LOG_ID = "ІНДЕКСАТОР";
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndexReader.class);
     
     /**
      * Lock object for concurent safe base index operations.
@@ -55,16 +58,16 @@ public abstract class IndexReader {
                 returnedIndex.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry(baseIndexReader.readLine()));
             }
         } catch (java.io.FileNotFoundException ex) {
-            RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу бази не знайдено. Створюю новий.");
+            LOGGER.warn("base index file not found. Creating new index.");
             java.io.File usersIndexFile = new java.io.File(RibbonServer.BASE_PATH + "/" + RibbonServer.BASE_INDEX_PATH);
             try {
                 usersIndexFile.createNewFile();
             } catch (java.io.IOException exq) {
-                RibbonServer.logAppend(LOG_ID, 0, "неможливо створити новий файл індексу бази!");
+                LOGGER.error("Unable to create new index file!", exq);
                 System.exit(5);
             }
         } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 0, "помилка читання файлу індекса бази повідомлень!");
+            LOGGER.error("IO error while reading base index!", ex);
             System.exit(4);
         }
         return returnedIndex;
@@ -87,16 +90,16 @@ public abstract class IndexReader {
                 returnedIndex.add(new SessionManager.SessionEntry(readedCsv));
             }
         } catch (java.io.FileNotFoundException ex) {
-            RibbonServer.logAppend(LOG_ID, 2, "попередній файл індексу сесій не знайдено. Створюю новий.");
+            LOGGER.warn("session index file not found. Creating new index.");
             java.io.File usersIndexFile = new java.io.File(RibbonServer.BASE_PATH + "/" + "session.index");
             try {
                 usersIndexFile.createNewFile();
             } catch (java.io.IOException exq) {
-                RibbonServer.logAppend(LOG_ID, 0, "неможливо створити новий файл індексу сесій!");
+                LOGGER.error("Unable to create new index file!", exq);
                 System.exit(5);
             }
         } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 0, "помилка читання файлу індекса сесій!");
+            LOGGER.error("IO error while reading session index!", ex);
             System.exit(4);
         }
         return returnedIndex;
@@ -115,7 +118,7 @@ public abstract class IndexReader {
                     sesWriter.close();
                 }
             } catch (java.io.IOException ex) {
-                RibbonServer.logAppend(LOG_ID, 0, "Неможливо записита файл индекса сесій!");
+                LOGGER.error( "Unable to write to session index!", ex);
             }
         }
     }
@@ -140,13 +143,13 @@ public abstract class IndexReader {
                     sesWriter = new java.io.FileWriter(RibbonServer.BASE_PATH + "/" + "session.index");
                     sesWriter.write(contentBuf.toString());
                     } catch (java.io.IOException ex) {
-                        RibbonServer.logAppend(LOG_ID, 0, "Неможливо записита файл індекса сесій!");
+                        LOGGER.error( "Unable to write to session index!", ex);
                     } finally {
                         if (sesWriter != null) {
                             try {
                                 sesWriter.close();
                             } catch (java.io.IOException ex) {
-                                RibbonServer.logAppend(LOG_ID, 0, "Неможливо закрити файл індекса сесій!");
+                                LOGGER.error( "Unable to close session index!", ex);
                             }
                         }
                     }
@@ -169,7 +172,7 @@ public abstract class IndexReader {
                     messageWriter.close();
                 }
             } catch (java.io.IOException ex) {
-                RibbonServer.logAppend(LOG_ID, 0, "Неможливо записита файл индекса бази повідомлень!");
+                LOGGER.error( "Unable to write to base index!", ex);
             }
         }
     }
@@ -194,7 +197,7 @@ public abstract class IndexReader {
                             messageWriter.write(contentBuf.toString());
                         }
                     } catch (java.io.IOException ex) {
-                        RibbonServer.logAppend(LOG_ID, 0, "Неможливо записита файл индекса бази повідомлень!");
+                        LOGGER.error( "Unable to write base index file!", ex);
                     }
                 }
             }
@@ -237,7 +240,7 @@ public abstract class IndexReader {
                 }
             }
         } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 0, "помилка запису до файлу " + indexFile);
+            LOGGER.error("error during writing to file " + indexFile, ex);
             System.exit(4);
         } finally {
             try {
@@ -264,7 +267,7 @@ public abstract class IndexReader {
         } catch (java.io.FileNotFoundException ex) {
             return null;
         } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 0, "помилка читання файлу " + indexFile);
+            LOGGER.error("error during reading from file " + indexFile);
             System.exit(4);
         }
         return buf.toString().split("\n");

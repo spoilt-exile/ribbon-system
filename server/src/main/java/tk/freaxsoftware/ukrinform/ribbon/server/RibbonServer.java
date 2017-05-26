@@ -19,6 +19,8 @@
 
 package tk.freaxsoftware.ukrinform.ribbon.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tk.freaxsoftware.extras.faststorage.exception.EntityProcessingException;
 import tk.freaxsoftware.extras.faststorage.ignition.FastStorageIgnition;
 import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
@@ -29,6 +31,8 @@ import tk.freaxsoftware.ukrinform.ribbon.server.web.WebServer;
  * @author Stanislav Nepochatov
  */
 public class RibbonServer {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(RibbonServer.class);
     
     /**
      * Default time and date format for server.
@@ -47,12 +51,6 @@ public class RibbonServer {
      * @since RibbonServer a1
      */
     public static String CurrentDirectory = System.getProperty("user.dir");
-    
-    /**
-     * Log file object.
-     * @since RibbonServer a1
-     */
-    private static java.io.File logFile;
     
     /**
      * RibbonServer main configuration.
@@ -322,17 +320,14 @@ public class RibbonServer {
      * @since RibbonServer a2
      */
     private static class IOWrapper extends tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.SystemWrapper {
-
-        @Override
-        public void log(String logSource, Integer logLevel, String logMessage) {
-            RibbonServer.logAppend(logSource, logLevel, logMessage);
-        }
+        
+        public void log(String logSource, Integer logLevel, String logMessage) {}
 
         @Override
         public void addMessage(String schemeName, String typeName, tk.freaxsoftware.ukrinform.ribbon.lib.data.message.Message givenMessage) {
             for (int index = 0; index < givenMessage.getDirectories().length; index++) {
                 if (Directories.getDirPath(givenMessage.getDirectories()[index]) == null) {
-                    this.log("ОБГОРТКА", 1, "схема " + schemeName + " (" + typeName + ") посилається на неіснуючий напрямок " + givenMessage.getDirectories()[index]);
+                    LOGGER.error("scheme " + schemeName + " (" + typeName + ") points on non-existing directory " + givenMessage.getDirectories()[index]);
                     givenMessage.setDirectories(new String[] {IO_IMPORT_EM_DIR});
                     break;
                 }
@@ -345,7 +340,7 @@ public class RibbonServer {
         public void registerPropertyName(String givenName) {
             Boolean result = tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty.Types.registerTypeIfNotExist(givenName);
             if (result) {
-                this.log(IOControl.getLOG_ID(), 2, "зареєстровано новий тип ознак '" + givenName + "'");
+                LOGGER.warn("new property type registered '" + givenName + "'");
             }
         }
 
@@ -369,8 +364,8 @@ public class RibbonServer {
                 return;
             }
             if (RibbonServer.DIRTY_LIST.isEmpty()) {
-                RibbonServer.logAppend(RibbonServer.LOG_ID, 2, "модуль " + moduleType + " за схемою " + moduleScheme + " отримав помилку при роботі.");
-                RibbonServer.logAppend(RibbonServer.LOG_ID, 1, "система переходить у \'брудний\' режим!");
+                LOGGER.warn("module " + moduleType + " by scheme " + moduleScheme + " get error");
+                LOGGER.error("system run in `dirty` mode!");
                 //TODO add admin remote notification of such event
             }
             synchronized (RibbonServer.DIRTY_LOCK) {
@@ -387,10 +382,10 @@ public class RibbonServer {
             String moduleString = moduleType + ":" + modulePrint;
             synchronized (RibbonServer.DIRTY_LOCK) {
                 if (!RibbonServer.DIRTY_LIST.remove(moduleString)) {
-                    RibbonServer.logAppend(RibbonServer.LOG_ID, 1, "запису " + moduleScheme + " немає у списку збійних модулів!");
+                    LOGGER.error("module " + moduleScheme + " not present in fault module list!!");
                 }
                 if (RibbonServer.DIRTY_LIST.isEmpty() && RibbonServer.CURR_STATE == RibbonServer.SYS_STATES.DIRTY) {
-                    RibbonServer.logAppend(RibbonServer.LOG_ID, 2, "система працює у штатному режимі");
+                    LOGGER.warn("system run in normal mode.");
                     RibbonServer.CURR_STATE = RibbonServer.SYS_STATES.READY;
                 }
             }
@@ -413,13 +408,12 @@ public class RibbonServer {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        createLogFile();
-        logAppend(LOG_ID, -1, "Начало роботи системы...");
-        logAppend(LOG_ID, 2, "Версія системи: " + RIBBON_MAJOR_VER + RIBBON_MINOR_VER + RIBBON_DEVEL_VER);
+        LOGGER.warn("System loading...");
+        LOGGER.warn("Ribbon Server " + RIBBON_MAJOR_VER + RIBBON_MINOR_VER + RIBBON_DEVEL_VER);
         CURR_STATE = RibbonServer.SYS_STATES.INIT;
         setSystemVariables();
         if (IO_ENABLED) {
-            logAppend(LOG_ID, 2, "налаштування бібліотек імпорту до системи");
+            LOGGER.warn("IO library configurration");
             IOControl.getInstance().initWrapper(new IOWrapper());
             IOControl.getInstance().registerPathes(BASE_PATH + "/import/", BASE_PATH + "/export/");
             ImportQuene = new tk.freaxsoftware.ukrinform.ribbon.lib.io.importer.Queue(CurrentDirectory + "/imports/", BASE_PATH + "/import/");
@@ -427,20 +421,19 @@ public class RibbonServer {
             IOControl.getInstance().registerImport(ImportQuene);
             IOControl.getInstance().registerExport(ExportDispatcher);
         }
-        logAppend(LOG_ID, 3, "початок налаштування контролю доступу");
+        LOGGER.info("access control configuration");
         try {
             FastStorageIgnition.igniteOverrided(RibbonServer.class.getClassLoader().getResourceAsStream("entities.ign"), BASE_PATH + "/");
         } catch (EntityProcessingException ex) {
-            logAppend(LOG_ID, 0, "Unable to ignite entities storage!");
-            ex.printStackTrace();
+            LOGGER.error("Unable to ignite entities storage!", ex);
             System.exit(-1);
         }
         AccessHandler.init();
-        logAppend(LOG_ID, 3, "початок налаштування напрявків");
+        LOGGER.info("directory configuration");
         Directories.init();
-        logAppend(LOG_ID, 3, "зчитування індексу бази повідомленнь");
+        LOGGER.info("message index reading");
         Messenger.init();
-        logAppend(LOG_ID, 3, "зчитування індексу сесій системи");
+        LOGGER.info("system session index reading");
         SessionManager.init();
         CURR_STATE = RibbonServer.SYS_STATES.READY;
         if (OPT_CREATE_REPORTS) {
@@ -452,15 +445,15 @@ public class RibbonServer {
         if (IO_ENABLED) {
             ImportQuene.importRun();
         }
-        logAppend(LOG_ID, 3, "проводиться перевірка конфігурації");
+        LOGGER.info("validating system config");
         validateSystemVariables();
-        logAppend(LOG_ID, 2, "налаштування мережі");
+        LOGGER.info("network config");
         if (HTTP_ENABLED) {
             WebServer.init(HTTP_PORT);
         }
         try {
             java.net.ServerSocket RibbonServSocket = new java.net.ServerSocket(NETWORK_PORT);
-            logAppend(LOG_ID, 3, "система готова для прийому повідомлень");
+            LOGGER.info("system is ready for messages");
             while (true) {
                 java.net.Socket inSocket = RibbonServSocket.accept();
                 if ((!inSocket.getInetAddress().getHostAddress().equals("127.0.0.1") && RibbonServer.NETWORK_ALLOW_REMOTE == false) || SessionManager.checkConnectionLimit() == true) {
@@ -470,72 +463,8 @@ public class RibbonServer {
                 }
             }
         } catch (java.io.IOException ex) {
-            logAppend(LOG_ID, 0, "неможливо створити сервер!");
+            LOGGER.error("Unable to run network server!", ex);
             System.exit(7);
-        }
-    }
-    
-    /**
-     * Create Ribbon log file if it doesn't exist.
-     * @since RibbonServer a1
-     */
-    private static void createLogFile() {
-        logFile = new java.io.File(CurrentDirectory + "/ribbonserver.log");
-        if (!logFile.exists()) {
-            try {
-                logFile.createNewFile();
-            } catch (java.io.IOException ex) {
-                logFile = null;
-                logAppend(LOG_ID, 0, "неможливо створити файл журналу!");
-                System.exit(1);
-            }
-        }
-    }
-    
-    /**
-     * Print formated messages to System.out<br>
-     * <b>Message types:</b><br>
-     * <ul>
-     * <li>(<b>0</b>): critical error in application;</li>
-     * <li>(<b>1</b>): handleable error in application;</li>
-     * <li>(<b>2</b>): warning during execution;</li>
-     * <li>(<b>3</b>): common information;</li>
-     * </ul>
-     * @param component component which call this method;
-     * @param type message type (see below);
-     * @param message string of text message;
-     * @since RibbonServer a1
-     */
-    public static synchronized void logAppend(String component, Integer type, String message) {
-        String typeStr = "";
-        switch (type) {
-            case 0:
-                typeStr = "критична помилка";
-                break;
-            case 1:
-                typeStr = "помилка";
-                break;
-            case 2:
-                typeStr = "попередження";
-                break;
-            case 3:
-                typeStr = "повідомлення";
-                break;
-        }
-        String compiledMessage = getCurrentDate() + " ["+ component + "] " + typeStr + ">> '" + message + "';";
-        System.out.println(compiledMessage);
-        if (CONTROL_IS_PRESENT == true) {
-            SessionManager.broadcast(compiledMessage, RibbonProtocol.CONNECTION_TYPES.CONTROL);
-        }
-        if (logFile != null) {
-            try (java.io.FileWriter logWriter = new java.io.FileWriter(logFile, true)) {
-                logWriter.write(compiledMessage + "\n");
-                logWriter.close();
-            } catch (Exception ex) {
-                logFile = null;
-                logAppend(LOG_ID, 0, "неможливо записати файл журналу!");
-                System.exit(1);
-            }
         }
     }
     
@@ -562,11 +491,10 @@ public class RibbonServer {
         try {
             mainConfig.load(new java.io.FileInputStream(new java.io.File(CurrentDirectory + "/server.properties")));
         } catch (java.io.FileNotFoundException ex) {
-            logAppend(LOG_ID, 0, "у робочої директорії немає файлу конфігурації системи!"
-                    + "\nРобоча директорія: " + CurrentDirectory);
+            LOGGER.error("Can't find server.properties file in" + CurrentDirectory);
             System.exit(2);
         } catch (java.io.IOException ex) {
-            logAppend(LOG_ID, 0, "неможливо прочитати файл конфігурації системи!");
+            LOGGER.error("Can't read file server.properties!", ex);
             System.exit(2);
         }
         
@@ -574,7 +502,7 @@ public class RibbonServer {
         try {
             BASE_PATH = new String(mainConfig.getProperty("base_path").getBytes("ISO-8859-1"), "UTF-8");
         } catch (java.io.UnsupportedEncodingException ex) {
-            RibbonServer.logAppend(LOG_ID, 1, "неможливо визначити шлях до бази!");
+            LOGGER.error("unable to define path for base", ex);
             System.exit(3);
         }
         //BASE_ALLOW_ATTACHMENTS = mainConfig.getProperty("base_allow_attachments").equals("0") ? false : true;
@@ -601,7 +529,7 @@ public class RibbonServer {
         try {
             ACCESS_REMOTE_GROUP = new String(mainConfig.getProperty("access_remote_group").getBytes("ISO-8859-1"), "UTF-8");
         } catch (java.io.UnsupportedEncodingException ex) {
-            RibbonServer.logAppend(LOG_ID, 1, "неможливо визначити напрямок реєстрації помилок!");
+            LOGGER.error("Unable to define remote group name!", ex);
             System.exit(3);
         }
         
@@ -615,7 +543,7 @@ public class RibbonServer {
         try {
             IO_IMPORT_EM_DIR = new String(mainConfig.getProperty("io_import_em_dir").getBytes("ISO-8859-1"), "UTF-8");
         } catch (java.io.UnsupportedEncodingException ex) {
-            RibbonServer.logAppend(LOG_ID, 1, "неможливо визначити напрямок реєстрації помилок!");
+            LOGGER.error("Unable to define emergency directory!", ex);
             System.exit(3);
         }
         //Integer loc_IO_EXPORT_QUENE_SIZE = ACCESS_SESSION_MAX_COUNT = Integer.valueOf(mainConfig.getProperty("io_export_quene_size"));
@@ -626,7 +554,7 @@ public class RibbonServer {
         try {
             DEBUG_POST_DIR = new String(mainConfig.getProperty("debug_post_dir").getBytes("ISO-8859-1"), "UTF-8");
         } catch (java.io.UnsupportedEncodingException ex) {
-            RibbonServer.logAppend(LOG_ID, 1, "неможливо визначити напрямок реєстрації помилок!");
+            LOGGER.error("Unable to define debug directory!", ex);
             System.exit(3);
         }
         
@@ -634,36 +562,36 @@ public class RibbonServer {
         HTTP_ENABLED = mainConfig.getProperty("http_enabled", "0").equals("1");
         HTTP_PORT = Integer.valueOf(mainConfig.getProperty("http_port", "0"));
         
-        logAppend(LOG_ID, 3, 
-                "початкова конфігурація завершена.\n" + 
-                "Шлях до бази: " + BASE_PATH + "\n" +
+        LOGGER.info(
+                "initial config finished.\n" + 
+                "Base path: " + BASE_PATH + "\n" +
                 //(RibbonServer.BASE_ALLOW_ATTACHMENTS ? "Зберігання файлів увімкнено." : "") + "\n" +
                 //(RibbonServer.CACHE_ENABLED ? "Кешування бази увімкнено.\nРозмір кешу: " + RibbonServer.CACHE_SIZE + "\n" : "") +
-                (RibbonServer.NETWORK_ALLOW_REMOTE ? "Мережевий доступ увімкнено.\n"
-                + "Мережевий порт:" + RibbonServer.NETWORK_PORT + "\n"
-                + (RibbonServer.NETWORK_MAX_CONNECTIONS == -1 ? "Без ліміту з'єднань." : "Кількість з'єднань: " 
-                + RibbonServer.NETWORK_MAX_CONNECTIONS) + "\n" : "Мережевий доступ заблоковано.\n")
-                + (RibbonServer.ACCESS_ALLOW_MULTIPLIE_LOGIN ? "Дозволена неодноразова авторізація.\n" : "Неодноразова авторізація заблокована.\n")
-                + "Маска для системної категорії доступу ALL:" + RibbonServer.ACCESS_ALL_MASK + "\n"
-                + (RibbonServer.ACCESS_ALLOW_SESSIONS ? "Сесії дозволені.\nКількість споживань сесії:" + RibbonServer.ACCESS_SESSION_MAX_COUNT + "\n" : "")
-                + (RibbonServer.ACCESS_ALLOW_REMOTE ? "Видалений режим дозволено.\nГрупа для видаленого режиму:" + RibbonServer.ACCESS_REMOTE_GROUP + "\n" : "")
-                + (RibbonServer.OPT_POST_INIT ? "Автоматичний випуск тестового повідомлення увімкнено.\n" : "")
-                + (RibbonServer.OPT_CREATE_REPORTS ? "Створення рапортів увімкнено.\n" : "")
+                (RibbonServer.NETWORK_ALLOW_REMOTE ? "Network access enabled.\n"
+                + "Port:" + RibbonServer.NETWORK_PORT + "\n"
+                + (RibbonServer.NETWORK_MAX_CONNECTIONS == -1 ? "No limits" : "Connections limited: " 
+                + RibbonServer.NETWORK_MAX_CONNECTIONS) + "\n" : "Network access disabled.\n")
+                + (RibbonServer.ACCESS_ALLOW_MULTIPLIE_LOGIN ? "Multiple auth enabled.\n" : "Multiple auth disabled.\n")
+                + "Mask for system group ALL:" + RibbonServer.ACCESS_ALL_MASK + "\n"
+                + (RibbonServer.ACCESS_ALLOW_SESSIONS ? "Sessions enabled.\nSession max using count:" + RibbonServer.ACCESS_SESSION_MAX_COUNT + "\n" : "")
+                + (RibbonServer.ACCESS_ALLOW_REMOTE ? "Remote mode enabled.\nGroup for remote mode:" + RibbonServer.ACCESS_REMOTE_GROUP + "\n" : "")
+                + (RibbonServer.OPT_POST_INIT ? "Automatic hello message post enabled.\n" : "")
+                + (RibbonServer.OPT_CREATE_REPORTS ? "Report creation enabled.\n" : "")
                 + (RibbonServer.IO_ENABLED ? 
                     (
-                    "Операції іморту/експорту увікнені.\n" +
-                    (RibbonServer.IO_IGNORE_DIRTY ? "[УВАГА!] Режим ігнорування помилок увікнено!\n" : "") + 
-                    "Аварійний напрямок:" + RibbonServer.IO_IMPORT_EM_DIR + "\n"
+                    "IO enabled.\n" +
+                    (RibbonServer.IO_IGNORE_DIRTY ? "WARNING! IO errors will be ignored!\n" : "") + 
+                    "Emergency directory:" + RibbonServer.IO_IMPORT_EM_DIR + "\n"
                     //"Розмір черги експорту:" + loc_IO_EXPORT_QUENE_SIZE + "\n" +
                     //"Розмір черги помилок експорту:" + loc_IO_EXPORT_ERRQUENE_SIZE + "\n"
                     ):
                     ""
                 )
-                + (RibbonServer.DEBUG_POST_EXCEPTIONS ? "Режим дебагінгу активовано.\nНапрямок реєстрації помилок: " + RibbonServer.DEBUG_POST_DIR + "\n" : "")
+                + (RibbonServer.DEBUG_POST_EXCEPTIONS ? "Debug mode enabled.\nDebug directory:" + RibbonServer.DEBUG_POST_DIR + "\n" : "")
                 + (RibbonServer.HTTP_ENABLED ?
                     (
-                    "HTTP сервер увімкнено\n" +
-                    "Порт:" + RibbonServer.HTTP_PORT
+                    "HTTP server enabled\n" +
+                    "Port:" + RibbonServer.HTTP_PORT
                     ):
                      ""
                 )
@@ -688,20 +616,20 @@ public class RibbonServer {
             }
         }
         if (ACCESS_ALL_MASK.length() > 3 && !MASK_VALID) {
-            logAppend(LOG_ID, 1, "Невірне налаштування маски доступу ALL (" + ACCESS_ALL_MASK + ")");
+            LOGGER.warn("Incorrect setting for ALL mask (" + ACCESS_ALL_MASK + ")");
             ACCESS_ALL_MASK = VAL_ACCESS_ALL_MASK;
         }
         
         //Turn off sessions if session use max count is lower or equal to 0;
         if (ACCESS_ALLOW_SESSIONS && ACCESS_SESSION_MAX_COUNT <= 0) {
-            logAppend(LOG_ID, 1, "Невірне налаштування кешу (" + ACCESS_SESSION_MAX_COUNT + ")");
+            LOGGER.warn("Incorrect session usage count setting (" + ACCESS_SESSION_MAX_COUNT + ")");
             ACCESS_ALLOW_SESSIONS = false;
         }
         
         //EXIT if group doesn't exist
         if (ACCESS_ALLOW_REMOTE && !AccessHandler.isGroupExisted(ACCESS_REMOTE_GROUP)) {
-            logAppend(LOG_ID, 0, "помилка видаленого режиму: групи " + ACCESS_REMOTE_GROUP + " не існує");
-            logAppend(LOG_ID, 3, "Перевірьте параметр access_remote_group у файлі конфігурації");
+            LOGGER.error("remote mode error: grou " + ACCESS_REMOTE_GROUP + " doesn't exist");
+            LOGGER.info("Check access_remote_group value in config file");
             System.exit(3);
         }
         
@@ -710,8 +638,8 @@ public class RibbonServer {
             
             //EXIT if emergency dir set incorrect
             if (Directories.getDirPath(IO_IMPORT_EM_DIR) == null) {
-                logAppend(LOG_ID, 0, "помилка налаштування імпорту: напрямку " + IO_IMPORT_EM_DIR + " не існує");
-                logAppend(LOG_ID, 3, "Перевірьте параметр io_import_em_dir у файлі конфігурації");
+                LOGGER.error("import config error: directory " + IO_IMPORT_EM_DIR + " doesn't exist");
+                LOGGER.info("Check io_import_em_dir value in config file");
                 System.exit(3);
             }
             
@@ -719,13 +647,14 @@ public class RibbonServer {
         
         //EXIT if debug directory doesn't exist
         if (DEBUG_POST_EXCEPTIONS && Directories.getDirPath(DEBUG_POST_DIR) == null) {
-            logAppend(LOG_ID, 0, "помилка дебагінгу: напрямку " + DEBUG_POST_DIR + " не існує");
-            logAppend(LOG_ID, 3, "Перевірьте параметр debug_post_dir у файлі конфігурації");
+            LOGGER.error("debug error: directory " + DEBUG_POST_DIR + " doesn't exist");
+            LOGGER.info("Check debug_post_dir value in config file");
             System.exit(3);
         }
         
+        //EXIT if http port set below 1024
         if (HTTP_ENABLED && HTTP_PORT < 1024) {
-            logAppend(LOG_ID, 0, "неможливо встановити порт HTTP за значенням меньш ніж 1024");
+            LOGGER.error("Unable to run HTTP on port below 1024");
             System.exit(3);
         }
     }
@@ -751,7 +680,7 @@ public class RibbonServer {
                 }
             }
         } catch (Exception ex) {
-            RibbonServer.logAppend(LOG_ID, 1, "Неможливо добути хеш-суму!");
+            LOGGER.error("Unable to calculate hash!", ex);
         }
         return hexString.toString();
     }

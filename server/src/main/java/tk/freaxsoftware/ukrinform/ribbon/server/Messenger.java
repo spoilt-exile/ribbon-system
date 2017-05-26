@@ -19,6 +19,9 @@
 
 package tk.freaxsoftware.ukrinform.ribbon.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Messages store, indexing, search and manipulation class
  * @author Stanislav Nepochatov
@@ -26,7 +29,7 @@ package tk.freaxsoftware.ukrinform.ribbon.server;
  */
 public final class Messenger {
     
-    private static String LOG_ID = "ПОВІДОМЛЕННЯ";
+    private static final Logger LOGGER = LoggerFactory.getLogger(Directories.class);
     
     /**
      * Storage of message entries.
@@ -81,7 +84,7 @@ public final class Messenger {
             }
             addToTagIndex(currEntry);
         }
-        RibbonServer.logAppend(LOG_ID, 3, "база повідомлень завантажена (" + messageIndex.size() + ")");
+        LOGGER.info("base message index loaded (" + messageIndex.size() + ")");
     }
     
     /**

@@ -19,6 +19,11 @@
 
 package tk.freaxsoftware.ukrinform.ribbon.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User;
+
 /**
  * Ribbon protocol server side class
  * @author Stanislav Nepochatov
@@ -26,7 +31,7 @@ package tk.freaxsoftware.ukrinform.ribbon.server;
  */
 public class RibbonProtocol {
     
-    private String LOG_ID = "ПРОТОКОЛ";
+    private static final Logger LOGGER = LoggerFactory.getLogger(RibbonProtocol.class);
     
     /**
      * Tail of protocol result which should be delivered to all peers;
@@ -176,18 +181,18 @@ public class RibbonProtocol {
                             }
                             CURR_TYPE = CONNECTION_TYPES.valueOf(parsedArgs[0]);
                             if (!parsedArgs[2].equals(System.getProperty("file.encoding"))) {
-                                RibbonServer.logAppend(LOG_ID, 2, "мережева сесія вимогає іншої кодової сторінки:" + parsedArgs[2]);
+                                LOGGER.warn("Netwrok session require other codepage:" + parsedArgs[2]);
                                 CURR_SESSION.setReaderEncoding(parsedArgs[2]);
                             }
                             return "OK:";
                         } catch (IllegalArgumentException ex) {
-                            return "RIBBON_ERROR:Невідомий тип з'єднання!";
+                            return "RIBBON_ERROR:Unknown connection type!";
                         }
                     } else {
-                        return "RIBBON_ERROR:Невідомий ідентефікатор протокола.";
+                        return "RIBBON_ERROR:Unknown protocol id.";
                     }
                 } else {
-                    return "RIBBON_WARNING:З'єднання вже ініціьовано!";
+                    return "RIBBON_WARNING:Connection already initiated!";
                 }
             }
         });
@@ -201,19 +206,19 @@ public class RibbonProtocol {
           public String exec(String args) {
               String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 2);
               if (!RibbonServer.ACCESS_ALLOW_MULTIPLIE_LOGIN && SessionManager.isAlreadyLogined(parsedArgs[0])) {
-                  return "RIBBON_ERROR:Користувач " + parsedArgs[0] + " вже увійшов до системи!";
+                  return "RIBBON_ERROR:User " + parsedArgs[0] + " already logined!";
               }
               if (CURR_TYPE == CONNECTION_TYPES.CONTROL && (!AccessHandler.isUserIsMemberOf(parsedArgs[0], "ADM"))) {
-                  return "RIBBON_ERROR:Користувач " + parsedArgs[0] + " не є адміністратором системи.";
+                  return "RIBBON_ERROR:User " + parsedArgs[0] + " is not an admin.";
               }
               String returned = AccessHandler.PROC_LOGIN_USER(parsedArgs[0], parsedArgs[1]);
               if (returned == null) {
                   if (CURR_TYPE == CONNECTION_TYPES.CLIENT) {
-                      RibbonServer.logAppend(LOG_ID, 3, "користувач " + parsedArgs[0] + " увійшов до системи.");
+                      LOGGER.info("user " + parsedArgs[0] + " logined to the system.");
                   } else if (CURR_TYPE == CONNECTION_TYPES.CONTROL) {
-                      RibbonServer.logAppend(LOG_ID, 3, "адміністратор " + parsedArgs[0] + " увійшов до системи.");
+                      LOGGER.info("admin " + parsedArgs[0] + " logined to the system.");
                       if (RibbonServer.CONTROL_IS_PRESENT == false) {
-                          RibbonServer.logAppend(RibbonServer.LOG_ID, 2, "ініційовано контроль системи!");
+                          LOGGER.info("system control initiated!");
                           RibbonServer.CONTROL_IS_PRESENT = true;
                       }
                   }
@@ -239,9 +244,9 @@ public class RibbonProtocol {
             @Override
             public String exec(String args) {
                 if (!RibbonServer.ACCESS_ALLOW_SESSIONS) {
-                    return "RIBBON_ERROR:Сесії вимкнено!";
+                    return "RIBBON_ERROR:Sessions disabled!";
                 } else if (CURR_SESSION.CURR_ENTRY == null) {
-                    return "RIBBON_ERROR:Вхід не виконано!";
+                    return "RIBBON_ERROR:Login required!";
                 } else {
                     return CURR_SESSION.CURR_ENTRY.SESSION_HASH_ID;
                 }
@@ -256,11 +261,11 @@ public class RibbonProtocol {
             @Override
             public String exec(String args) {
                 if (!RibbonServer.ACCESS_ALLOW_SESSIONS) {
-                    return "RIBBON_ERROR:Сесії вимкнено!";
+                    return "RIBBON_ERROR:Sessions disabled!";
                 }
                 SessionManager.SessionEntry exicted = SessionManager.getUserBySessionEntry(args);
                 if (exicted == null) {
-                    return "RIBBON_ERROR:Сесію не знайдено!:";
+                    return "RIBBON_ERROR:Session not found!";
                 } else {
                     String returned = AccessHandler.PROC_RESUME_USER(exicted);
                     if (returned == null) {
@@ -284,20 +289,20 @@ public class RibbonProtocol {
             @Override
             public String exec(String args) {
                 if (!RibbonServer.ACCESS_ALLOW_REMOTE && !IS_REMOTE) {
-                    return "RIBBON_ERROR:Видалений режим вимкнено!";
+                    return "RIBBON_ERROR:Remote mode disabled!";
                 } else if (CURR_SESSION.USER_NAME == null) {
-                    return "RIBBON_ERROR:Вхід не виконано!";
+                    return "RIBBON_ERROR:Login required!";
                 }
                 String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 2);
                 if (CURR_TYPE == CONNECTION_TYPES.CONTROL && (!AccessHandler.isUserIsMemberOf(parsedArgs[0], "ADM"))) {
-                    return "RIBBON_ERROR:Користувач " + parsedArgs[0] + " не є адміністратором системи.";
+                    return "RIBBON_ERROR:User " + parsedArgs[0] + " is not an admin.";
                 }
                 String returned = AccessHandler.PROC_LOGIN_USER(parsedArgs[0], parsedArgs[1]);
                 if (returned == null) {
                     if (CURR_TYPE == CONNECTION_TYPES.CLIENT) {
-                        RibbonServer.logAppend(LOG_ID, 3, "користувач " + parsedArgs[0] + " видалено увійшов до системи.");
+                        LOGGER.info("user " + parsedArgs[0] + " logined to the system by remote protocol.");
                     } else if (CURR_TYPE == CONNECTION_TYPES.CONTROL) {
-                        RibbonServer.logAppend(LOG_ID, 3, "адміністратор " + parsedArgs[0] + " видалено увійшов до системи.");
+                        LOGGER.info("admin " + parsedArgs[0] + " logined to the system by remote protocol.");
                     }
                     return "OK:";
                 } else {
@@ -316,7 +321,7 @@ public class RibbonProtocol {
                     tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User curr = AccessHandler.getEntryByName(CURR_SESSION.USER_NAME);
                     return "OK:{" + curr.getLogin() + "},{" + curr.getDescription() + "}," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(curr.getGroups().getKeys().toArray(new String[curr.getGroups().getKeys().size()]));
                 } else {
-                    return "RIBBON_ERROR:Вхід до системи не виконано!";
+                    return "RIBBON_ERROR:Login required!";
                 }
             }
         });
@@ -329,17 +334,17 @@ public class RibbonProtocol {
             @Override
             public String exec(String args) {
                 if (CURR_SESSION.USER_NAME == null) {
-                    return "RIBBON_ERROR:Вхід не виконано!";
+                    return "RIBBON_ERROR:Login required!";
                 } else if (!RibbonServer.ACCESS_ALLOW_REMOTE) {
-                    return "RIBBON_ERROR:Видалений режим вимкнено!";
+                    return "RIBBON_ERROR:Remote mode disabled!";
                 } else if (!AccessHandler.isUserIsMemberOf(CURR_SESSION.USER_NAME, RibbonServer.ACCESS_REMOTE_GROUP)) {
-                    return "RIBBON_ERROR:Ця сессія не може використовувати видалений режим!";
+                    return "RIBBON_ERROR:This session can't use remote mode!";
                 }
                 IS_REMOTE = "1".equals(args) ? true : false;
                 if (IS_REMOTE) {
-                    RibbonServer.logAppend(LOG_ID, 3, "увімкнено видалений режим (" + CURR_SESSION.SESSION_TIP + ")");
+                    LOGGER.info("remote mode enabled (" + CURR_SESSION.SESSION_TIP + ")");
                 } else {
-                    RibbonServer.logAppend(LOG_ID, 3, "вимкнено видалений режим (" + CURR_SESSION.SESSION_TIP + ")");
+                    LOGGER.info("remote mode disabled (" + CURR_SESSION.SESSION_TIP + ")");
                 }
                 return "OK:" + (IS_REMOTE ? "1" : "0");
             }
@@ -355,15 +360,15 @@ public class RibbonProtocol {
             @Override
             public String exec(String args) {
                 if (CURR_SESSION.USER_NAME == null) {
-                    return "RIBBON_ERROR:Вхід не виконано!";
+                    return "RIBBON_ERROR:Login required!";
                 } else if (!IS_REMOTE) {
-                    return "RIBBON_ERROR:Видалений режим вимкнено!";
+                    return "RIBBON_ERROR:Remote mode disabled!";
                 }
-                tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User overUser = AccessHandler.getEntryByName(tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 1)[0]);
+                User overUser = AccessHandler.getEntryByName(CsvFormat.commonParseLine(args, 1)[0]);
                 if (overUser == null) {
-                    return "RIBBON_ERROR:Користувача не знайдено!";
+                    return "RIBBON_ERROR:User not found!";
                 } else if (!overUser.isEnabled()) {
-                    return "RIBBON_ERROR:Користувача заблоковано!";
+                    return "RIBBON_ERROR:User disabled!";
                 }
                 String oldUserName = CURR_SESSION.USER_NAME;
                 CURR_SESSION.USER_NAME = overUser.getLogin();
@@ -372,7 +377,7 @@ public class RibbonProtocol {
                 try {
                     subResult = process(CURR_SESSION.inStream.readLine());
                 } catch (java.io.IOException ex) {
-                    RibbonServer.logAppend(LOG_ID, 1, "неможливо прочитати дані з сокету!");
+                    LOGGER.error("unable to read data from socket!", ex);
                     SessionManager.closeSession(CURR_SESSION);
                 }
                 CURR_SESSION.USER_NAME = oldUserName;
@@ -388,7 +393,7 @@ public class RibbonProtocol {
             @Override
             public String exec(String args) {
                 if (CURR_TYPE == CONNECTION_TYPES.CONTROL && SessionManager.hasOtherControl(CURR_SESSION) == false) {
-                    RibbonServer.logAppend(RibbonServer.LOG_ID, 2, "контроль над системою завершено!");
+                    LOGGER.warn("control detached!");
                     RibbonServer.CONTROL_IS_PRESENT = false;
                 }
                 return "COMMIT_CLOSE:";
@@ -417,11 +422,11 @@ public class RibbonProtocol {
             public String exec(String args) {
                 if (IS_REMOTE) {
                     if (CURR_SESSION.USER_NAME == null) {
-                        return "RIBBON_ERROR:Вхід не виконано!";
+                        return "RIBBON_ERROR:Login required!";
                     }
                     return Directories.PROC_GET_PSEUDO(CURR_SESSION.USER_NAME);
                 } else {
-                    return "RIBBON_ERROR:Видалений режим вимкнено!";
+                    return "RIBBON_ERROR:Remote mode disabled!";
                 }
             }
         });
@@ -472,7 +477,8 @@ public class RibbonProtocol {
                             collectMessage = false;
                         }
                     } catch (java.io.IOException ex) {
-                        return "RIBBON_ERROR:Неможливо прочитати повідомлення з сокету!";
+                        LOGGER.error("Unable to read data from socket", ex);
+                        return "RIBBON_ERROR:Unable to read data from socket!";
                     }
                 }
                 recievedMessage.setContent(messageBuffer.toString());
@@ -498,14 +504,14 @@ public class RibbonProtocol {
                     java.util.ArrayList<String[]> parsed = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.complexParseLine(args, 4, 1);
                     Directories.PseudoDirEntry currPostPseudo = Directories.getPseudoDir(parsed.get(0)[0]);
                     if (currPostPseudo == null) {
-                        return "RIBBON_ERROR:Псевдонапрямок " + parsed.get(0)[0] + " не існує.";
+                        return "RIBBON_ERROR:Pseudo directory " + parsed.get(0)[0] + " doesn't exist.";
                     }
                     String[] postDirs = currPostPseudo.getinternalDirectories();
                     String commandToPost = "RIBBON_POST_MESSAGE:-1," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(postDirs) + args.substring(currPostPseudo.getName().length() + 2);
-                    RibbonServer.logAppend(LOG_ID, 3, "додано повідомлення через псевдонапрямок '" + currPostPseudo.getName() + "'");
+                    LOGGER.info("posted message through pseudo directory '" + currPostPseudo.getName() + "'");
                     return process(commandToPost);
                 } else {
-                    return "RIBBON_ERROR:Видалений режим вимкнено!";
+                    return "RIBBON_ERROR:Remote mode disabled!";
                 }
             }
         });
@@ -522,11 +528,11 @@ public class RibbonProtocol {
                 String givenIndex = parsedArgs[1];
                 StringBuffer returnedMessage = new StringBuffer();
                 if (AccessHandler.checkAccess(CURR_SESSION.USER_NAME, givenDir, 0) == false) {
-                    return "RIBBON_ERROR:Помилка доступу до напрямку " + givenDir;
+                    return "RIBBON_ERROR:Directory access error for " + givenDir;
                 }
                 String dirPath = Directories.getDirPath(givenDir);
                 if (dirPath == null) {
-                    return "RIBBON_ERROR:Напрямок " + givenDir + " не існує!";
+                    return "RIBBON_ERROR:Directory " + givenDir + " doesn't exist!";
                 } else {
                     try {
                         java.io.BufferedReader messageReader = new java.io.BufferedReader(new java.io.FileReader(dirPath + givenIndex));
@@ -536,10 +542,10 @@ public class RibbonProtocol {
                         }
                         return returnedMessage.append("END:").toString();
                     } catch (java.io.FileNotFoundException ex) {
-                        return "RIBBON_ERROR:Повідмолення не існує!";
+                        return "RIBBON_ERROR:Message not found!";
                     } catch (java.io.IOException ex) {
-                        RibbonServer.logAppend(LOG_ID, 1, "помилка зчитування повідомлення " + givenDir + ":" + givenIndex);
-                        return "RIBBON_ERROR:Помилка виконання команди!";
+                        LOGGER.error("message reading error " + givenDir + ":" + givenIndex, ex);
+                        return "RIBBON_ERROR:Command execution error!";
                     }
                 }
             }
@@ -570,12 +576,13 @@ public class RibbonProtocol {
                             collectMessage = false;
                         }
                     } catch (java.io.IOException ex) {
-                        return "RIBBON_ERROR:Неможливо прочитати повідомлення з сокету!";
+                        LOGGER.error("Unable to read data from socket!", ex);
+                        return "RIBBON_ERROR:Unable to read data from socket!";
                     }
                 }
                 modTemplate.setContent(messageBuffer.toString());
                 if (matchedEntry == null) {
-                    return "RIBBON_ERROR:Повідмолення не існує!";
+                    return "RIBBON_ERROR:Message doesn't exist!";
                 }
                 Integer oldIntFlag = AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.getDirectories(), 2);
                 Integer newIntFlag = AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, modTemplate.getDirectories(), 1);
@@ -584,7 +591,7 @@ public class RibbonProtocol {
                         if (AccessHandler.checkAccess(CURR_SESSION.USER_NAME, matchedEntry.getDirectories()[dirIndex], 1) == true) {
                             continue;
                         } else {
-                            return "RIBBON_ERROR:Помилка доступу до напрямку " + matchedEntry.getDirectories()[dirIndex] +  ".";
+                            return "RIBBON_ERROR:Directory access error for" + matchedEntry.getDirectories()[dirIndex] +  ".";
                         }
                     }
                     Procedures.PROC_MODIFY_MESSAGE(matchedEntry, modTemplate);
@@ -593,9 +600,9 @@ public class RibbonProtocol {
                     return "OK:";
                 } else {
                     if (oldIntFlag != null) {
-                        return "RIBBON_ERROR:Помилка доступу до напрямку " + matchedEntry.getDirectories()[oldIntFlag] +  ".";
+                        return "RIBBON_ERROR:Directory access error for " + matchedEntry.getDirectories()[oldIntFlag] +  ".";
                     } else {
-                        return "RIBBON_ERROR:Помилка доступу до напрямку " + modTemplate.getDirectories()[newIntFlag] +  ".";
+                        return "RIBBON_ERROR:Directory access error for " + modTemplate.getDirectories()[newIntFlag] +  ".";
                     }
                 }
             }
@@ -614,13 +621,13 @@ public class RibbonProtocol {
                     java.util.ArrayList<String[]> parsed = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.complexParseLine(args, 5, 1);
                     Directories.PseudoDirEntry currPostPseudo = Directories.getPseudoDir(parsed.get(0)[1]);
                     if (currPostPseudo == null) {
-                        return "RIBBON_ERROR:Псевдонапрямок " + parsed.get(0)[1] + " не існує.";
+                        return "RIBBON_ERROR:Pseudo directory " + parsed.get(0)[1] + " doesn't exist.";
                     }
                     String[] postDirs = currPostPseudo.getinternalDirectories();
                     String commandToPost = "RIBBON_MODIFY_MESSAGE:" + parsed.get(0)[0] + "," + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(postDirs) + args.substring(currPostPseudo.getName().length() + 13);
                     return process(commandToPost);
                 } else {
-                    return "RIBBON_ERROR:Видалений режим вимкнено!";
+                    return "RIBBON_ERROR:Remote mode disabled!";
                 }
             }
         });
@@ -634,7 +641,7 @@ public class RibbonProtocol {
             public String exec(String args) {
                 tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(args);
                 if (matchedEntry == null) {
-                    return "RIBBON_ERROR:Повідмолення не існує!";
+                    return "RIBBON_ERROR:Message doesn't exist!";
                 } else {
                     if (matchedEntry.getAuthor().equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.getDirectories(), 2) == null)) {
                         Procedures.PROC_DELETE_MESSAGE(matchedEntry);
@@ -642,7 +649,7 @@ public class RibbonProtocol {
                         BROADCAST_TYPE = CONNECTION_TYPES.CLIENT;
                         return "OK:";
                     } else {
-                        return "RIBBON_ERROR:Помилка доступу до повідомлення.";
+                        return "RIBBON_ERROR:Message access error.";
                     }
                 }
             }
@@ -658,7 +665,7 @@ public class RibbonProtocol {
                 String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 3);
                 tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(parsedArgs[0]);
                 if (matchedEntry == null) {
-                    return "RIBBON_ERROR:Повідмолення не існує!";
+                    return "RIBBON_ERROR:Message doesn't exist!";
                 }
                 if ((matchedEntry.getAuthor().equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.getDirectories(), 2) != null))) {
                     tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty newProp = new tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty(parsedArgs[1], CURR_SESSION.USER_NAME, parsedArgs[2]);
@@ -672,7 +679,7 @@ public class RibbonProtocol {
                     BROADCAST_TYPE = CONNECTION_TYPES.CLIENT;
                     return "OK:";
                 } else {
-                    return "RIBBON_ERROR:Помилка доступу до повідомлення.";
+                    return "RIBBON_ERROR:Message access error.";
                 }
             }
         });
@@ -687,7 +694,7 @@ public class RibbonProtocol {
                 String[] parsedArgs = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.commonParseLine(args, 3);
                 tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageEntry matchedEntry = Messenger.getMessageEntryByIndex(parsedArgs[0]);
                 if (matchedEntry == null) {
-                    return "RIBBON_ERROR:Повідмолення не існує!";
+                    return "RIBBON_ERROR:Message doesn't exist!";
                 }
                 if ((matchedEntry.getAuthor().equals(CURR_SESSION.USER_NAME) || (AccessHandler.checkAccessForAll(CURR_SESSION.USER_NAME, matchedEntry.getDirectories(), 2) != null))) {
                     tk.freaxsoftware.ukrinform.ribbon.lib.data.message.MessageProperty findedProp = null;
@@ -706,10 +713,10 @@ public class RibbonProtocol {
                         BROADCAST_TYPE = CONNECTION_TYPES.CLIENT;
                         return "OK:";
                     } else {
-                        return "RIBBON_ERROR:Системної ознаки не існує!";
+                        return "RIBBON_ERROR:Message property doesn't exist";
                     }
                 } else {
-                    return "RIBBON_ERROR:Помилка доступу до повідомлення.";
+                    return "RIBBON_ERROR:Message access error.";
                 }
             }
         });
@@ -755,13 +762,13 @@ public class RibbonProtocol {
             if (currComm.COMMAND_NAME.equals(command)) {
                 if (currComm.COMM_TYPE == this.CURR_TYPE || (currComm.COMM_TYPE == CONNECTION_TYPES.ANY && this.CURR_TYPE != CONNECTION_TYPES.NULL) || this.CURR_TYPE == CONNECTION_TYPES.CONTROL) {
                     if (this.CURR_SESSION.USER_NAME == null && (currComm.COMM_TYPE == CONNECTION_TYPES.CLIENT || currComm.COMM_TYPE == CONNECTION_TYPES.CONTROL)) {
-                        return "RIBBON_ERROR:Вхід не виконано!";
+                        return "RIBBON_ERROR:Login required!";
                     } else {
                         exComm = currComm;
                     }
                     break;
                 } else {
-                    return "RIBBON_ERROR:Ця команда не може бути використана цим з’єднанням!";
+                    return "RIBBON_ERROR:This command can't be exucuted by this sesion.";
                 }
             }
         }
@@ -769,8 +776,8 @@ public class RibbonProtocol {
             try {
                 return exComm.exec(args);
             } catch (Exception ex) {
-                Procedures.postException("Помилка при роботі сесії " + this.CURR_SESSION.SESSION_TIP
-                        + "\nКоманда: " + command + ":" + args + "\n\n", ex);
+                Procedures.postException("Session error " + this.CURR_SESSION.SESSION_TIP
+                        + "\nCommand: " + command + ":" + args + "\n\n", ex);
                 /**
                 if (RibbonServer.DEBUG_POST_EXCEPTIONS) {
                     StringBuffer exMesgBuf = new StringBuffer();
@@ -790,10 +797,10 @@ public class RibbonProtocol {
                 }
                 RibbonServer.logAppend(LOG_ID, 1, "помилка при виконанні команди " + exComm.COMMAND_NAME + "!");
                 **/
-                return "RIBBON_ERROR:Помилка команди:" + ex.toString();
+                return "RIBBON_ERROR:Command error:" + ex.toString();
             }
         } else {
-            return "RIBBON_ERROR:Невідома команда!";
+            return "RIBBON_ERROR:Unknown command!";
         }
     }
 }

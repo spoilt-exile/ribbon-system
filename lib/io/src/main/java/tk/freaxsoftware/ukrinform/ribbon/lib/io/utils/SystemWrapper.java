@@ -25,12 +25,6 @@ package tk.freaxsoftware.ukrinform.ribbon.lib.io.utils;
  */
 public abstract class SystemWrapper {
     
-    /**
-     * Log message to the system;
-     * @param logSource source of the message;
-     * @param logLevel level of the message (according to server specs);
-     * @param logMessage message for logging;
-     */
     public abstract void log(String logSource, Integer logLevel, String logMessage);
     
     /**

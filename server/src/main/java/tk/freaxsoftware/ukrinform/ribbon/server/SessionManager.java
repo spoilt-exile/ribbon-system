@@ -20,6 +20,8 @@
 package tk.freaxsoftware.ukrinform.ribbon.server;
 
 import java.util.Iterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Network sessions store class
@@ -28,7 +30,7 @@ import java.util.Iterator;
  */
 public final class SessionManager {
     
-    private static String LOG_ID = "СЕСІЯ";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SessionManager.class);
     
     /**
      * Arraylist with active network sessions.
@@ -177,9 +179,9 @@ public final class SessionManager {
                 inStream = new java.io.BufferedReader(new java.io.InputStreamReader(SessionSocket.getInputStream(), "UTF-8"));
                 outStream = new java.io.PrintWriter(SessionSocket.getOutputStream(), true);
             } catch (java.io.IOException ex) {
-                RibbonServer.logAppend(LOG_ID, 1, "неможливо створити потоки для мережевого сокета (" + SessionSocket.getInetAddress().getHostAddress() + ")");
+                LOGGER.error("Unableto create streams for socket (" + SessionSocket.getInetAddress().getHostAddress() + ")");
             } finally {
-                RibbonServer.logAppend(LOG_ID, 3, "додана нова мережева сессія (" + SessionSocket.getInetAddress().getHostAddress() + ")");
+                LOGGER.error("new network session added (" + SessionSocket.getInetAddress().getHostAddress() + ")");
                 ProtocolHandler = new RibbonProtocol(this);
                 this.isAlive = true;
             }
@@ -208,15 +210,15 @@ public final class SessionManager {
                 this.inStream.close();
                 this.outStream.close();
                 this.SessionSocket.close();
-                RibbonServer.logAppend(LOG_ID, 3, "мережеву сесію зачинено (" + SessionSocket.getInetAddress().getHostAddress() + ")");
+                LOGGER.info("network session closed (" + SessionSocket.getInetAddress().getHostAddress() + ")");
                 this.isAlive = false;
                 SessionManager.closeSession(this);
             } catch (java.lang.NullPointerException ex) {
-                RibbonServer.logAppend(LOG_ID, 1, "з'єднання аварійно разірване!");
+                LOGGER.error("connection refused!");
                 this.isAlive = false;
                 SessionManager.closeSession(this);
             } catch (java.io.IOException ex) {
-                RibbonServer.logAppend(LOG_ID, 1, "неможливо прочитати дані з сокету (" + SessionSocket.getInetAddress().getHostAddress() + ")");
+                LOGGER.error("unable to read data from socket (" + SessionSocket.getInetAddress().getHostAddress() + ")", ex);
                 this.isAlive = false;
                 SessionManager.closeSession(this);
             }
@@ -238,9 +240,9 @@ public final class SessionManager {
             try {
                 this.inStream = new java.io.BufferedReader(new java.io.InputStreamReader(SessionSocket.getInputStream(), charsetName));
             } catch (java.io.UnsupportedEncodingException ex) {
-                RibbonServer.logAppend(LOG_ID, 1, "неможливо встановити кодову сторінку!");
+                LOGGER.error("unable to set codepage " + charsetName);
             } catch (java.io.IOException ex) {
-                RibbonServer.logAppend(LOG_ID, 1, "неможливо прочитати дані з сокету (" + SessionSocket.getInetAddress().getHostAddress() + ")");
+                LOGGER.error("unable to read data from socket (" + SessionSocket.getInetAddress().getHostAddress() + ")");
             }
         }
         
@@ -261,7 +263,7 @@ public final class SessionManager {
      */
     public static void init() {
         SessionManager.sessionCookie = IndexReader.readSessionIndex();
-        RibbonServer.logAppend(LOG_ID, 3, "індекс сесій вдало завантажено");
+        LOGGER.info("session index loaded");
     }
 
     /**
@@ -327,7 +329,7 @@ public final class SessionManager {
      */
     public static Boolean checkConnectionLimit() {
         if (RibbonServer.NETWORK_MAX_CONNECTIONS != -1 && SessionManager.sessionsStore.size() == RibbonServer.NETWORK_MAX_CONNECTIONS) {
-            RibbonServer.logAppend(LOG_ID, 1, "досягнуто ліміту з'єднань (" + RibbonServer.NETWORK_MAX_CONNECTIONS + ")");
+            LOGGER.error("connection limit reached (" + RibbonServer.NETWORK_MAX_CONNECTIONS + ")");
             return true;
         } else {
             return false;

@@ -21,6 +21,8 @@ package tk.freaxsoftware.ukrinform.ribbon.server;
 
 import java.util.Arrays;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tk.freaxsoftware.extras.faststorage.storage.Handlers;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.UserGroupHandler;
@@ -35,7 +37,7 @@ import tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup;
  */
 public final class AccessHandler {
     
-    private static String LOG_ID = "ДОСТУП";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccessHandler.class);
     
     /**
      * User storage list.
@@ -61,9 +63,9 @@ public final class AccessHandler {
         AccessHandler.groupStore = groupHandler.getAll();
         AccessHandler.userStore = userHandler.getAll();
         //AccessHandler.groupStore.add(new tk.freaxsoftware.ukrinform.ribbon.lib.data.user.UserGroup("{ADM},{Службова група адміністраторів системи \"Стрічка\"}"));
-        RibbonServer.logAppend(LOG_ID, 3, "індекс груп опрацьвано (" + groupStore.size() + ")");
+        LOGGER.info("index of groups loaded (" + groupStore.size() + ")");
         //AccessHandler.userStore = IndexReader.readUsers();
-        RibbonServer.logAppend(LOG_ID, 3, "індекс користувачів опрацьвано (" + userStore.size() + ")");
+        LOGGER.info("index of users loaded (" + userStore.size() + ")");
     }
     
     /**
@@ -199,15 +201,15 @@ public final class AccessHandler {
         if (findedUser != null) {
             if (findedUser.getPassword().equals(givenHash)) {
                 if (!findedUser.isEnabled()) {
-                    return "Користувач " + givenName + " заблоковано!";
+                    return "User " + givenName + " disabled!";
                 } else {
                     return null;
                 }
             } else {
-                return "Невірний пароль!";
+                return "Wrong password!";
             }
         } else {
-            return "Користувача " + givenName + " не знайдено!";
+            return "User " + givenName + " not found!";
         }
     }
     
@@ -229,13 +231,13 @@ public final class AccessHandler {
         }
         if (findedUser != null) {
             if (!findedUser.isEnabled()) {
-                return "Користувач " + givenEntry.SESSION_USER_NAME + " заблоковано!";
+                return "User " + givenEntry.SESSION_USER_NAME + " disabled!";
             } else {
                 givenEntry.useEntry();
                 return null;
             }
         } else {
-            return "Користувача " + givenEntry.SESSION_USER_NAME + " не знайдено!";
+            return "User " + givenEntry.SESSION_USER_NAME + " not found!";
         }
     }
     

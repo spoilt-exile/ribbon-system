@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tk.freaxsoftware.extras.faststorage.storage.Handlers;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry;
@@ -35,6 +37,8 @@ import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
  * @since RibbonServer a1
  */
 public final class Directories {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(Directories.class);
     
     /**
      * ID of this component or object for loging.
@@ -101,11 +105,11 @@ public final class Directories {
             description = parsed.get(0)[1];
             String[] parsedDirs = parsed.get(1);
             for (String currParsedDir : parsedDirs) {
-                tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry addDir = Directories.rootDir.returnEndDir("", currParsedDir);
+                DirEntry addDir = Directories.rootDir.returnEndDir("", currParsedDir);
                 if (addDir != null) {
                     directories.add(addDir);
                 } else {
-                    RibbonServer.logAppend(LOG_ID, 1, "помилка у індексі псевдонапрямків (напрямок " + currParsedDir + " не існує)");
+                    LOGGER.error("pseudo directory index error (directory " + currParsedDir + " doesn't exist)");
                 }
             }
         }
@@ -212,7 +216,7 @@ public final class Directories {
         ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema> readIter = readedDirs.listIterator();
         while (readIter.hasNext()) {
             tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema currDir = readIter.next();
-            RibbonServer.logAppend(LOG_ID, 3, "додано напрямок (" + currDir.getFullName() + ": " + currDir.getDescription() + ")");
+            LOGGER.info("added directory (" + currDir.getFullName() + ": " + currDir.getDescription() + ")");
             createDirs(currDir);
             if (RibbonServer.IO_ENABLED) {
                 IOControl.getInstance().getDispathcer().subscribeDir(currDir.getExportList(), currDir.getFullName());
@@ -222,7 +226,7 @@ public final class Directories {
         if (RibbonServer.ACCESS_ALLOW_REMOTE) {
             pseudoDirs = IndexReader.readPseudoDirectories();
             for (PseudoDirEntry curr: pseudoDirs) {
-                RibbonServer.logAppend(LOG_ID, 3, "додано псевдонапрямок " + curr.getName() + " " + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(curr.getinternalDirectories()));
+                LOGGER.info("added pseudo directory " + curr.getName() + " " + tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvFormat.renderGroup(curr.getinternalDirectories()));
             }
         }
     }
@@ -246,9 +250,9 @@ public final class Directories {
             treeWriter.write(Directories.rootDir.treeReport(0));
             treeWriter.close();
         } catch (java.io.IOException ex) {
-            RibbonServer.logAppend(LOG_ID, 1, "неможливо створити файл дерева напрямків!");
+            LOGGER.error("Unableto create dir report!", ex);
         } finally {
-            RibbonServer.logAppend(LOG_ID, 3, "створено файл дерева напрямків.");
+            LOGGER.info("Dir report file created.");
         }
     }
     
