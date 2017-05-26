@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package ribbonserver;
+package tk.freaxsoftware.ukrinform.ribbon.server;
 
 /**
  * Read, parse and store CSV Ribbon configurations and base index class
