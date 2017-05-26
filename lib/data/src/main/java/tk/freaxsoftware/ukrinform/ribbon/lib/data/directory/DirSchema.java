@@ -26,6 +26,7 @@ import java.util.Objects;
 import tk.freaxsoftware.extras.faststorage.generic.ECSVAble;
 import tk.freaxsoftware.extras.faststorage.generic.ECSVDefinition;
 import tk.freaxsoftware.extras.faststorage.generic.ECSVFields;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVFormat;
 import tk.freaxsoftware.extras.faststorage.reading.EntityReader;
 import tk.freaxsoftware.extras.faststorage.writing.EntityWriter;
 
@@ -44,7 +45,7 @@ public class DirSchema implements ECSVAble<String> {
             .addKey(String.class)
             .addPrimitive(ECSVFields.PR_STRING)
             .addArray(null)
-            .addMap(null, null)
+            .addInternalArray(DirPermissionEntry.class, String.valueOf(ECSVFormat.INTERNAL_DEFAULT_SEPARATOR), ECSVFormat.INTERNAL_DEFAULT_SEPARATOR_EXPR)
             .addArray(null);
     
     /**
@@ -67,7 +68,7 @@ public class DirSchema implements ECSVAble<String> {
      * Access list for directory
      * @since RibbonServer a2
      */
-    private Map<String, String> rawAccessEntries;
+    private List<DirPermissionEntry> accessEntries;
 
     /**
      * Directory's exports list
@@ -94,7 +95,7 @@ public class DirSchema implements ECSVAble<String> {
         languages = new ArrayList<>();
         languages.add("ALL");
         exportList = null;
-        rawAccessEntries = null;
+        accessEntries = null;
     }
 
     /**
@@ -102,14 +103,14 @@ public class DirSchema implements ECSVAble<String> {
      * @param fullName full name of directory;
      * @param description description of directory;
      * @param languages languages of direcotry;
-     * @param rawAccessEntries raw access entries;
+     * @param accessEntries access entries;
      * @param exportList export list;
      */
-    public DirSchema(String fullName, String description, List<String> languages, Map<String, String> rawAccessEntries, List<String> exportList) {
+    public DirSchema(String fullName, String description, List<String> languages, List<DirPermissionEntry> accessEntries, List<String> exportList) {
         this.fullName = fullName;
         this.description = description;
         this.languages = languages;
-        this.rawAccessEntries = rawAccessEntries;
+        this.accessEntries = accessEntries;
         this.exportList = exportList;
     }
 
@@ -155,20 +156,14 @@ public class DirSchema implements ECSVAble<String> {
         this.languages = languages;
     }
 
-    /**
-     * @return the rawAccessEntries
-     */
-    public Map<String, String> getRawAccessEntries() {
-        return rawAccessEntries;
+    public List<DirPermissionEntry> getAccessEntries() {
+        return accessEntries;
     }
 
-    /**
-     * @param rawAccessEntries the rawAccessEntries to set
-     */
-    public void setRawAccessEntries(Map<String, String> rawAccessEntries) {
-        this.rawAccessEntries = rawAccessEntries;
+    public void setAccessEntries(List<DirPermissionEntry> accessEntries) {
+        this.accessEntries = accessEntries;
     }
-
+    
     /**
      * @return the exportList
      */
@@ -208,7 +203,7 @@ public class DirSchema implements ECSVAble<String> {
         if (!!Objects.equals(this.languages, other.languages)) {
             return false;
         }
-        if (!!Objects.equals(this.rawAccessEntries, other.rawAccessEntries)) {
+        if (!!Objects.equals(this.accessEntries, other.accessEntries)) {
             return false;
         }
         if (!!Objects.equals(this.exportList, other.exportList)) {
@@ -219,7 +214,7 @@ public class DirSchema implements ECSVAble<String> {
 
     @Override
     public String toString() {
-        return "DirSchema{" + "fullName=" + fullName + ", description=" + description + ", languages=" + languages + ", rawAccessEntries=" + rawAccessEntries + ", exportList=" + exportList + '}';
+        return "DirSchema{" + "fullName=" + fullName + ", description=" + description + ", languages=" + languages + ", rawAccessEntries=" + accessEntries + ", exportList=" + exportList + '}';
     }
 
     @Override
@@ -247,7 +242,7 @@ public class DirSchema implements ECSVAble<String> {
         fullName = reader.readKey();
         description = reader.readString();
         languages = reader.readArray();
-        rawAccessEntries = reader.readMap();
+        accessEntries = reader.readInternalArray(DirPermissionEntry.class);
         exportList = reader.readArray();
     }
 
@@ -256,7 +251,7 @@ public class DirSchema implements ECSVAble<String> {
         writer.writeKey(fullName);
         writer.writeString(description);
         writer.writeArray(languages);
-        writer.writeMap(rawAccessEntries);
+        writer.writeInternalArray(accessEntries);
         writer.writeArray(exportList);
     }
 
@@ -265,7 +260,7 @@ public class DirSchema implements ECSVAble<String> {
         DirSchema otherDir = (DirSchema) updatedEntity;
         description = otherDir.getDescription();
         languages = otherDir.getLanguages();
-        rawAccessEntries = otherDir.getRawAccessEntries();
+        accessEntries = otherDir.getAccessEntries();
         exportList = otherDir.getExportList();
     }
     

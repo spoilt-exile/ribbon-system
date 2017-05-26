@@ -22,9 +22,9 @@ package tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers;
 import java.util.Collections;
 import java.util.List;
 import tk.freaxsoftware.extras.faststorage.storage.AbstractEntityHandler;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.utils.ListBuilder;
-import tk.freaxsoftware.ukrinform.ribbon.lib.data.utils.MapBuilder;
 
 /**
  * Directory entity handler.
@@ -50,23 +50,23 @@ public class DirectoryHandler extends AbstractEntityHandler<DirSchema, String> {
     public void onStorageCreation() {
         create(new DirSchema("СИСТЕМА", "Головний напрямок новин про розробку системи", 
                 ListBuilder.newInstance(String.class).add("ALL").list(), 
-                MapBuilder.newInstance(String.class, String.class).put("GALL", "100").map(), 
+                ListBuilder.newInstance(String.class).add(new DirPermissionEntry(true, "ALL", DirPermissionEntry.DIR_READ_ONLY)).list(),  
                 Collections.EMPTY_LIST));
         create(new DirSchema("СИСТЕМА.Розробка", "Новини про розробку", 
                 ListBuilder.newInstance(String.class).add("UA").add("RU").list(), 
-                MapBuilder.newInstance(String.class, String.class).put("GALL", "100").map(), 
+                ListBuilder.newInstance(String.class).add(new DirPermissionEntry(true, "ALL", DirPermissionEntry.DIR_READ_ONLY)).list(), 
                 Collections.EMPTY_LIST));
         create(new DirSchema("СИСТЕМА.Тест", "Тестовий напрямок", 
                 ListBuilder.newInstance(String.class).add("UA").add("RU").list(), 
-                MapBuilder.newInstance(String.class, String.class).put("GALL", "110").map(), 
+                ListBuilder.newInstance(String.class).add(new DirPermissionEntry(true, "ALL", DirPermissionEntry.DIR_READ_WRITE)).list(), 
                 Collections.EMPTY_LIST));
         create(new DirSchema("СИСТЕМА.Загублене", "Напрямок для загублених повідомлень", 
                 ListBuilder.newInstance(String.class).add("ALL").list(), 
-                MapBuilder.newInstance(String.class, String.class).put("GALL", "100").map(), 
+                ListBuilder.newInstance(String.class).add(new DirPermissionEntry(true, "ALL", DirPermissionEntry.DIR_READ_ONLY)).list(), 
                 Collections.EMPTY_LIST));
         create(new DirSchema("СИСТЕМА.Помилки", "Напрямок журналу помилок системи", 
                 ListBuilder.newInstance(String.class).add("ALL").list(), 
-                MapBuilder.newInstance(String.class, String.class).put("GALL", "000").map(), 
+                ListBuilder.newInstance(String.class).add(new DirPermissionEntry(true, "ALL", DirPermissionEntry.DIR_READ_ONLY)).list(), 
                 Collections.EMPTY_LIST));
     }
 

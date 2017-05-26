@@ -19,8 +19,16 @@
 
 package tk.freaxsoftware.ukrinform.ribbon.lib.data.directory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVAble;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVDefinition;
+import tk.freaxsoftware.extras.faststorage.generic.ECSVFields;
+import tk.freaxsoftware.extras.faststorage.generic.FieldConverter;
+import tk.freaxsoftware.extras.faststorage.reading.EntityReader;
+import tk.freaxsoftware.extras.faststorage.writing.EntityWriter;
 
 /**
  * Permission description object.
@@ -30,7 +38,20 @@ import java.util.Objects;
  * @author Stanislav Nepochatov
  * @since RibbonServer a2
  */
-public class DirPermissionEntry extends tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder {
+public class DirPermissionEntry implements ECSVAble<String> {
+    
+    public static Boolean[] DIR_READ_ONLY = new Boolean[] {true, false, false};
+    
+    public static Boolean[] DIR_READ_WRITE = new Boolean[] {true, true, false};
+    
+    public static Boolean[] DIR_FULL_ACCESS = new Boolean[] {true, true, true};
+    
+    public final static String TYPE = "RIBBON_DIRECTORY_PERM_ENTRY";
+    
+    public final static ECSVDefinition DEFINITION = ECSVDefinition.createNew()
+            .addKey(String.class)
+            .addPrimitive(ECSVFields.PR_BOOLEAN)
+            .addArray(FieldConverter.CONVERTER_BOOLEAN);
     
     /**
      * Access key (user or group)
@@ -45,33 +66,48 @@ public class DirPermissionEntry extends tk.freaxsoftware.ukrinform.ribbon.lib.da
     /**
      * Permission array
      */
-    private char[] permissionDescriptor;
+    private List<Boolean> permissionDescriptor;
     
     /**
      * Default constructor.
-     * 
-     * <p>Using for defining csv format options.</p>
      */
     public DirPermissionEntry() {
-        this.currentFormat = tk.freaxsoftware.ukrinform.ribbon.lib.data.csv.CsvElder.csvFormatType.DoubleStruct;
     }
     
     /**
-     * Default constructor
-     * @param key
-     * @param descriptor
+     * Compatibility constructor.
+     * @param isGroupEntry flag for group entries;
+     * @param key key of entry;
+     * @param rawDescriptor raw descriptor of permissions like {@code 100} or {@code 110};
      */
-    public DirPermissionEntry(String key, String descriptor) {
-        this();
+    public DirPermissionEntry(Boolean isGroupEntry, String key, String rawDescriptor) {
         this.key = key;
-        groupPermission = key.charAt(0) == 'G' ? true : false;
-        permissionDescriptor = descriptor.toCharArray();
+        this.groupPermission = isGroupEntry;
+        char[] rawPermissions = rawDescriptor.toCharArray();
+        this.permissionDescriptor = new ArrayList<>();
+        for (char entry: rawPermissions) {
+            this.permissionDescriptor.add(entry == '1');
+        }
     }
     
+    /**
+     * Parametric constructor.
+     * @param isGroupEntry flag for group entries.
+     * @param key key of entry.
+     * @param descriptor descriptor of permissions
+     */
+    public DirPermissionEntry(Boolean isGroupEntry, String key, Boolean[] descriptor) {
+        this.key = key;
+        this.groupPermission = isGroupEntry;
+        this.permissionDescriptor = Arrays.asList(descriptor);
+    }
+    
+    @Override
     public String getKey() {
         return key;
     }
 
+    @Override
     public void setKey(String key) {
         this.key = key;
     }
@@ -106,7 +142,7 @@ public class DirPermissionEntry extends tk.freaxsoftware.ukrinform.ribbon.lib.da
         if (!Objects.equals(this.groupPermission, other.groupPermission)) {
             return false;
         }
-        if (!Arrays.equals(this.permissionDescriptor, other.permissionDescriptor)) {
+        if (!Objects.equals(this.permissionDescriptor, other.permissionDescriptor)) {
             return false;
         }
         return true;
@@ -118,29 +154,46 @@ public class DirPermissionEntry extends tk.freaxsoftware.ukrinform.ribbon.lib.da
     }
 
     /**
-     * Return csv representation of permission object
-     * @return formated string representation of this permission object
-     */
-    @Override
-    public String toCsv() {
-        String returned = (groupPermission ? "G" : "U") + key + ":" + String.valueOf(permissionDescriptor);
-        return returned;
-    }
-
-    /**
      * Check permission with specified attempt action mode;
      * @param attemptMode integer identefication of type of the action 
      * which was initiated by user.
      * @return result of checking.
      */
     public Boolean checkByMode(Integer attemptMode) {
-        if (attemptMode > (permissionDescriptor.length - 1)) {
+        if (attemptMode > (permissionDescriptor.size() - 1)) {
             return false;
         }
-        if (permissionDescriptor[attemptMode] == '0') {
-            return false;
-        } else {
-            return true;
-        }
+        return permissionDescriptor.get(attemptMode);
+    }
+
+    @Override
+    public String getEntityType() {
+        return TYPE;
+    }
+
+    @Override
+    public ECSVDefinition getDefinition() {
+        return DEFINITION;
+    }
+
+    @Override
+    public void readFromECSV(EntityReader<String> reader) {
+        this.key = reader.readKey();
+        this.groupPermission = reader.readBoolean();
+        this.permissionDescriptor = reader.readArray();
+    }
+
+    @Override
+    public void writeToECSV(EntityWriter<String> writer) {
+        writer.writeKey(key);
+        writer.writeBoolean(groupPermission);
+        writer.writeArray(permissionDescriptor);
+    }
+
+    @Override
+    public void update(ECSVAble<String> updatedEntity) {
+        DirPermissionEntry otherEntry = (DirPermissionEntry) updatedEntity;
+        this.groupPermission = otherEntry.groupPermission;
+        this.permissionDescriptor = otherEntry.permissionDescriptor;
     }
 }

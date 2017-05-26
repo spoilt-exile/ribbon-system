@@ -20,7 +20,6 @@
 package tk.freaxsoftware.ukrinform.ribbon.lib.data.directory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -295,11 +294,7 @@ public class DirEntry extends DirSchema {
         this.setLanguages(givenSchema.getLanguages());
         this.setExportList(givenSchema.getExportList());
         this.setDirAccessEntries(new ArrayList<>());
-        if (givenSchema.getRawAccessEntries() != null && !givenSchema.getRawAccessEntries().isEmpty()) {
-            for (Map.Entry<String, String> entry: givenSchema.getRawAccessEntries().entrySet()) {
-                this.getDirAccessEntries().add(new DirPermissionEntry(entry.getKey(), entry.getValue()));
-            }
-        }
+        this.dirAccessEntries = givenSchema.getAccessEntries();
         String[] chunks = this.getFullName().split("\\.");
         this.setName(chunks[chunks.length - 1]);
         this.setDirPath(getFullName().toLowerCase().replaceAll("\\.", "/") + "/");

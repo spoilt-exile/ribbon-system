@@ -122,7 +122,7 @@ public final class AccessHandler {
             }
         }
         if (fallbackPermission == null) {
-            fallbackPermission = new tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry("GALL", RibbonServer.ACCESS_ALL_MASK);
+            fallbackPermission = new DirPermissionEntry(true, "ALL", RibbonServer.ACCESS_ALL_MASK);
         }
         if (findedAnswer == false) {
             findedAnswer = fallbackPermission.checkByMode(givenMode);
