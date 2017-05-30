@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Ribbon System</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script>
+            $(document).ready(function() {
+                $.getJSON("api/message/last", {}).done(function(data) {
+                    $("#last_message_index").html(data.index);
+                    $("#last_message_header").html(data.header);
+                    $("#last_message_author").html(data.author);
+                });
+                setInterval(function() {
+                    $.getJSON("api/message/last", {}).done(function(data) {
+                        $("#last_message_index").html(data.index);
+                        $("#last_message_header").html(data.header);
+                        $("#last_message_author").html(data.author);
+                    });
+                }, 10000);
+            });
+        </script>
+    </head>
+    <body>
+        <div id="last_message_index"></div>
+        <div id="last_message_header"></div>
+        <div id="last_message_author"></div>
+    </body>
+</html>

@@ -35,6 +35,7 @@ public class WebServer {
     
     public static void init(Integer port) {
         LOGGER.info("Starting web server on port {}", port);
+        Spark.staticFileLocation("web");
         Spark.port(port);
         Gson gson = new Gson();
         Spark.get("api/message/last", (req,res) -> Messenger.messageIndex.get(Messenger.messageIndex.size() - 1), gson::toJson);
