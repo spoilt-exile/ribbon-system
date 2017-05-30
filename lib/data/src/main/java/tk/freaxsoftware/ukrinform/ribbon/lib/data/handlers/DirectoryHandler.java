@@ -22,6 +22,7 @@ package tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers;
 import java.util.Collections;
 import java.util.List;
 import tk.freaxsoftware.extras.faststorage.storage.AbstractEntityHandler;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.utils.ListBuilder;

@@ -29,6 +29,7 @@ import tk.freaxsoftware.extras.faststorage.storage.Handlers;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirPermissionEntry;
 import tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirSchema;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.DirectoryHandler;
 import tk.freaxsoftware.ukrinform.ribbon.lib.io.utils.IOControl;
 
 /**
@@ -314,12 +315,13 @@ public final class Directories {
      * @since RibbonServer a1
      */
     public static String PROC_GET_DIRS() {
-        String returned = "";
-        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.directory.DirEntry> rootDirs = Directories.rootDir.getChildrenDirs().listIterator();
+        StringBuffer buffer = new StringBuffer();
+        ListIterator<DirEntry> rootDirs = Directories.rootDir.getChildrenDirs().listIterator();
         while (rootDirs.hasNext()) {
-            returned += rootDirs.next().PROC_GET_DIR();
+            buffer.append(rootDirs.next().PROC_GET_DIR((DirectoryHandler) Handlers.getHandlerByType(DirEntry.TYPE), buffer));
         }
-        return returned + "END:";
+        buffer.append("END:");
+        return buffer.toString();
     }
     
     /**

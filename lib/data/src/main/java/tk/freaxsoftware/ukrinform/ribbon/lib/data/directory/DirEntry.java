@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.handlers.DirectoryHandler;
 
 /**
  * Directory entry object.
@@ -375,10 +376,18 @@ public class DirEntry extends DirSchema {
      * Get cascade of foded diretories.
      * @return formated string for net protocol
      */
-    public String PROC_GET_DIR() {
-        String returned = "RIBBON_UCTL_LOAD_DIR:" + "\n";
+    public String PROC_GET_DIR(DirectoryHandler handler, StringBuffer buffer) {
+        buffer.append("RIBBON_UCTL_LOAD_DIR:");
+        buffer.append(handler.writeToString(this));
+        buffer.append("\n");
+        
         List<DirEntry> dirList = new ArrayList<>();
         this.getDirs(dirList);
+        for (DirEntry child: dirList) {
+            buffer.append("RIBBON_UCTL_LOAD_DIR:");
+            buffer.append(handler.writeToString(child));
+            buffer.append("\n");
+        }
         return null;
     }
     
