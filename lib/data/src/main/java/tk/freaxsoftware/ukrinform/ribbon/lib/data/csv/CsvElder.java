@@ -34,7 +34,7 @@ public abstract class CsvElder {
      * <p><b>WARNING!</b> This variable should be 
      * overriden by csvElder child classes.</p>
      */
-    public Integer baseCount = -1;
+    public transient Integer baseCount = -1;
     
     /**
      * Count of argument which must be
@@ -45,7 +45,7 @@ public abstract class CsvElder {
      * <p><b>WARNING!</b> This variable should be 
      * overriden by csvElder child classes.</p>
      */
-    public Integer groupCount = -1;
+    public transient Integer groupCount = -1;
     
     /**
      * Enumeration of csv format types.
@@ -80,7 +80,7 @@ public abstract class CsvElder {
      * <p><b>WARNING!</b> This variable should be 
      * overriden by csvElder child classes.</p>
      */
-    public csvFormatType currentFormat;
+    public transient csvFormatType currentFormat;
     
     /**
      * Return csv representation of data object.
