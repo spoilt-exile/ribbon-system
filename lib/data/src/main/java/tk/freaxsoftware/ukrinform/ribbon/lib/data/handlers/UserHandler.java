@@ -59,5 +59,21 @@ public class UserHandler extends AbstractEntityHandler<User, String>{
     public String getType() {
         return User.TYPE;
     }
+    
+    /**
+     * Gets user instance by login.
+     * @param login
+     * @return 
+     */
+    public User getUserByLogin(String login) {
+        synchronized(entitiesLock) {
+            for (User entity: entitiesStore) {
+                if (entity.getLogin().equals(login)) {
+                    return entity;
+                }
+            }
+        }
+        return null;
+    }
 
 }

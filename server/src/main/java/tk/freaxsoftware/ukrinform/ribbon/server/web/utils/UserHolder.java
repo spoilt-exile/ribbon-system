@@ -1,6 +1,6 @@
 /**
  * This file is part of RibbonServer application (check README).
- * Copyright (C) 2012-2013 Stanislav Nepochatov
+ * Copyright (C) 2017 Stanislav Nepochatov
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,30 +17,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package tk.freaxsoftware.ukrinform.ribbon.server.web;
+package tk.freaxsoftware.ukrinform.ribbon.server.web.utils;
 
-import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import spark.Spark;
-import tk.freaxsoftware.ukrinform.ribbon.server.Messenger;
-import tk.freaxsoftware.ukrinform.ribbon.server.web.routes.LoginRoutes;
+import tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User;
 
 /**
- * Web server for HTTP access.
+ * User context holder.
  * @author Stanislav Nepochatov
  */
-public class WebServer {
+public class UserHolder {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebServer.class);
-    
-    public static void init(Integer port) {
-        LOGGER.info("Starting web server on port {}", port);
-        Spark.staticFileLocation("web");
-        Spark.port(port);
-        Gson gson = new Gson();
-        Spark.get("api/message/last", (req,res) -> Messenger.messageIndex.get(Messenger.messageIndex.size() - 1), gson::toJson);
-        LoginRoutes.init();
+    private static ThreadLocal<User> user = new ThreadLocal<User>();
+
+    public static User getUser() {
+        return user.get();
+    }
+
+    public static void setUser(User user) {
+        UserHolder.user.set(user);
     }
     
 }

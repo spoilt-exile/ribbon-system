@@ -271,13 +271,25 @@ public class RibbonServer {
      * Enable access by HTTP.
      * @since RibbonServer a3
      */
-    private static Boolean HTTP_ENABLED;
+    public static Boolean HTTP_ENABLED;
     
     /**
      * Port for HTTP server.
      * @since RibbonServer a3
      */
-    private static Integer HTTP_PORT;
+    public static Integer HTTP_PORT;
+    
+    /**
+     * Token secret for JWT token.
+     * @since RibbonServer a3
+     */
+    public static String HTTP_JWT_TOKEN_SECRET;
+    
+    /**
+     * Number of valid hours for JWT token.
+     * @since RibbonServer a3
+     */
+    public static Integer HTTP_JWT_TOKEN_HOURS;
     
     /**
      * Name of directory index file.
@@ -561,6 +573,8 @@ public class RibbonServer {
         //Setting HTTP
         HTTP_ENABLED = mainConfig.getProperty("http_enabled", "0").equals("1");
         HTTP_PORT = Integer.valueOf(mainConfig.getProperty("http_port", "0"));
+        HTTP_JWT_TOKEN_SECRET = mainConfig.getProperty("http_jwt_token_secret");
+        HTTP_JWT_TOKEN_HOURS = Integer.valueOf(mainConfig.getProperty("http_jwt_token_hours", "24"));
         
         LOGGER.info(
                 "initial config finished.\n" + 
@@ -581,7 +595,7 @@ public class RibbonServer {
                     (
                     "IO enabled.\n" +
                     (RibbonServer.IO_IGNORE_DIRTY ? "WARNING! IO errors will be ignored!\n" : "") + 
-                    "Emergency directory:" + RibbonServer.IO_IMPORT_EM_DIR + "\n"
+                    "Emergency directory: " + RibbonServer.IO_IMPORT_EM_DIR + "\n"
                     //"Розмір черги експорту:" + loc_IO_EXPORT_QUENE_SIZE + "\n" +
                     //"Розмір черги помилок експорту:" + loc_IO_EXPORT_ERRQUENE_SIZE + "\n"
                     ):
@@ -591,7 +605,9 @@ public class RibbonServer {
                 + (RibbonServer.HTTP_ENABLED ?
                     (
                     "HTTP server enabled\n" +
-                    "Port:" + RibbonServer.HTTP_PORT
+                    "Port: " + RibbonServer.HTTP_PORT + "\n" + 
+                    "Token expire hours: " + RibbonServer.HTTP_JWT_TOKEN_HOURS + "\n" +
+                    (RibbonServer.HTTP_JWT_TOKEN_SECRET != null ? "Token secret: #################" : "Token secret not provided!")
                     ):
                      ""
                 )
@@ -655,6 +671,11 @@ public class RibbonServer {
         //EXIT if http port set below 1024
         if (HTTP_ENABLED && HTTP_PORT < 1024) {
             LOGGER.error("Unable to run HTTP on port below 1024");
+            System.exit(3);
+        }
+        
+        if (HTTP_ENABLED && HTTP_JWT_TOKEN_SECRET == null) {
+            LOGGER.error("Unable to run REST without token secret!");
             System.exit(3);
         }
     }

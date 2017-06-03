@@ -214,6 +214,33 @@ public final class AccessHandler {
     }
     
     /**
+     * Login user or return error.
+     * @param givenName name of user which is trying to login
+     * @param rawPassword raw password
+     * @return user or null
+     * @since RibbonServer a3
+     */
+    public static User loginUser(String givenName, String rawPassword) {
+        tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User findedUser = null;
+        java.util.ListIterator<tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User> usersIter = userStore.listIterator();
+        while (usersIter.hasNext()) {
+            tk.freaxsoftware.ukrinform.ribbon.lib.data.user.User currUser = usersIter.next();
+            if (currUser.getLogin().equals(givenName)) {
+                findedUser = currUser;
+                break;
+            }
+        }
+        if (findedUser != null) {
+            if (findedUser.getPassword().equals(RibbonServer.getHash(rawPassword))) {
+                if (findedUser.isEnabled()) {
+                    return findedUser;
+                }
+            } 
+        }
+        return null;
+    }
+    
+    /**
      * Resume user or return error.
      * @param givenEntry session entry of user which trying to resume;
      * @return null or error message;
