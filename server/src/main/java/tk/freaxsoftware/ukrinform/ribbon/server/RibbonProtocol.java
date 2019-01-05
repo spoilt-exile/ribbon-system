@@ -174,22 +174,18 @@ public class RibbonProtocol {
             public String exec(String args) {
                 String[] parsedArgs = args.split(",");
                 if (CURR_TYPE == CONNECTION_TYPES.NULL) {
-                    if (parsedArgs[1].equals(STR_VERSION)) {
-                        try {
-                            if (parsedArgs[0].equals("ANY") || parsedArgs[0].equals("NULL")) {
-                                throw new IllegalArgumentException();
-                            }
-                            CURR_TYPE = CONNECTION_TYPES.valueOf(parsedArgs[0]);
-                            if (!parsedArgs[2].equals(System.getProperty("file.encoding"))) {
-                                LOGGER.warn("Netwrok session require other codepage:" + parsedArgs[2]);
-                                CURR_SESSION.setReaderEncoding(parsedArgs[2]);
-                            }
-                            return "OK:";
-                        } catch (IllegalArgumentException ex) {
-                            return "RIBBON_ERROR:Unknown connection type!";
+                    try {
+                        if (parsedArgs[0].equals("ANY") || parsedArgs[0].equals("NULL")) {
+                            throw new IllegalArgumentException();
                         }
-                    } else {
-                        return "RIBBON_ERROR:Unknown protocol id.";
+                        CURR_TYPE = CONNECTION_TYPES.valueOf(parsedArgs[0]);
+                        if (!parsedArgs[2].equals(System.getProperty("file.encoding"))) {
+                            LOGGER.warn("Netwrok session require other codepage:" + parsedArgs[2]);
+                            CURR_SESSION.setReaderEncoding(parsedArgs[2]);
+                        }
+                        return "OK:";
+                    } catch (IllegalArgumentException ex) {
+                        return "RIBBON_ERROR:Unknown connection type!";
                     }
                 } else {
                     return "RIBBON_WARNING:Connection already initiated!";
